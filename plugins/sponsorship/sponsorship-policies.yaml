@@ -1,0 +1,38 @@
+# Employers whose postings carry blanket no-sponsorship language but who publish a named list of
+# exceptions. Code checks the posting against the list before the model sees it, so a boilerplate
+# line never becomes a blanket skip and a genuine miss is named precisely.
+#
+# Only add an employer here from the employer's own published policy, with the source and the
+# date it was read. Policies change; re-read the source before relying on an entry.
+#
+# exempt_groups: groups exempt for anyone. exempt_groups_by_route: groups exempt only for candidates on a
+# named visa route; a route counts when it is listed in your profile's work_authorization.routes. Group names must be long enough not to match ordinary prose: a one-word group such as
+# "Intelligence" matches ordinary sentences in a posting, while "Globex Intelligence" does not.
+#
+# The entry below is an INVENTED example showing the format. Replace it with real employers you have
+# checked yourself, each with its source URL and the date you read it.
+
+policies:
+  globex:
+    employer: Globex (invented example)
+    match: [globex]
+    source: https://careers.globex.example/immigration-policy
+    read: 2026-01-01
+    policy: >
+      Globex does not plan to sponsor new hires through the H-1B lottery, except in the business
+      groups listed below. (Invented text for the example.)
+    exempt_groups:
+      - "Globex Data Science"
+      - "Globex Platform Engineering"
+    # Open only to candidates on a named route listed in your profile's work_authorization.routes.
+    exempt_groups_by_route:
+      opt_extension:
+        - "Globex Intelligence"
+    not_applicable:
+      - "Globex Summer Internship"
+    outside_note: >
+      The posting's own group is not on the exception list, so the employer's blanket line stands for
+      this role. Say that precisely rather than calling it a blanket refusal to sponsor.
+    inside_note: >
+      This posting names a group on the employer's published exception list, so the blanket line does
+      not apply to it. Treat sponsorship as open and score the role on its merits.

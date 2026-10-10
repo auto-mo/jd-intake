@@ -1,0 +1,7 @@
+# Python dependencies for the server and the resume engine (Python 3.10+).
+# System tools, installed separately: LibreOffice (soffice) and poppler (pdfinfo, pdftotext, pdftoppm).
+flask>=3.0,<4
+pyyaml>=6.0
+python-docx>=1.1
+pypdf>=4.0
+openpyxl>=3.1   # only for the optional sponsorship plug-in

@@ -1,0 +1,58 @@
+# Base resumes for an invented person. Onboarding writes yours to profile/base_versions.yaml from your
+# real resume, then renders each one and checks it fits on one page. Every tailored resume starts from one.
+#
+# signals: a regular expression the evaluator matches against a job posting to suggest this version.
+
+default: operations
+versions:
+  operations:
+    label: Strategy and operations
+    signals: "operations|strategy|program|process|cross-functional"
+    education:
+      - school: LAKEVIEW UNIVERSITY
+        date: May 2025
+        place: Chicago, IL
+        lines: ["MS in Data Science", "Coursework: Machine Learning, Optimization, Data Visualization"]
+      - school: WESTFIELD STATE COLLEGE
+        date: May 2018
+        place: Columbus, OH
+        lines: ["BS in Economics"]
+    builds:
+      title: SELECTED PROJECTS
+      items:
+        - ["Demand forecasting model.", "Built a weekly demand forecast for 40 warehouses that cut stockouts by 18% in its first quarter."]
+        - ["Operations dashboard.", "Replaced six weekly spreadsheets with one live dashboard used by regional managers."]
+        - ["Route planning tool.", "Wrote a small Python tool that plans daily delivery routes for one region, cutting planning time from three hours to twenty minutes."]
+    experience:
+      - company: Northbridge Logistics
+        title: Senior Operations Analyst | Chicago, IL
+        dates: Jun 2025 – Present
+        bullets:
+          - Led a network redesign study across 40 warehouses that leadership used to close two sites and save $2.1M a year.
+          - Built the weekly operations review, aligning finance and regional leads on one set of numbers and cutting the meeting from two hours to forty minutes.
+          - Ran a carrier rate benchmark across 14 lanes and renegotiated three contracts, lowering freight cost per order by 7%.
+          - Coached four analysts on SQL and dbt, moving the team's recurring reports off spreadsheets and onto tested models.
+      - company: Copperleaf Health
+        title: Operations Analyst | Columbus, OH
+        dates: Jul 2020 – Aug 2023
+        bullets:
+          - Cut patient intake time by 30% by redesigning scheduling workflows across 12 clinics with front-desk and nursing leads.
+          - Automated monthly utilization reporting, saving the team about 20 hours a month and removing a recurring source of errors.
+          - Built a no-show prediction model that let clinics double-book the riskiest slots, recovering about 450 visits a quarter.
+      - company: Brightline Retail
+        title: Business Analyst | Columbus, OH
+        dates: Jun 2018 – Jun 2020
+        bullets:
+          - Analyzed promotion performance across 300 stores and recommended a mix change that lifted margin 2 points.
+          - Built the first store-level sales dashboard, adopted by 25 district managers within a month of launch.
+    skills_title: SKILLS
+    skills:
+      - ["Analytics", "SQL, Python, dbt, Excel modeling, A/B testing"]
+      - ["Tools", "Tableau, Looker, Jira, Notion"]
+      - ["Methods", "Forecasting, network design, process mapping, stakeholder interviews, executive reporting"]
+    projects: []
+  analytics:
+    label: Analytics
+    signals: "analytics|data|insights|forecast|sql|dashboard"
+    inherit: operations         # starts from operations; override only what differs
+    skills_title: TECHNICAL SKILLS

@@ -1,0 +1,12 @@
+/profile/
+/data/
+.env
+*.db
+*.db-*
+__pycache__/
+*.pyc
+.DS_Store
+node_modules/
+*.log
+.pytest_cache/
+docs/_source/

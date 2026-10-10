@@ -1,0 +1,612 @@
+:root {
+  --paper: #F4F6FB; --ink: #16202E; --accent: #1F6FE5; --muted: #6B7686;
+  --border: #D9DEE7; --danger: #C0392B; --ok: #1E8E5A; --warn: #B7791F; --surface: #FFFFFF;
+  --ok-bg: rgba(30, 142, 90, 0.12); --warn-bg: rgba(183, 121, 31, 0.14);
+  --danger-bg: rgba(192, 57, 43, 0.12); --neutral-bg: rgba(107, 118, 134, 0.12);
+  --li: #0A66C2; --li-bg: rgba(10, 102, 194, 0.08);
+  --bubble-me: rgba(31, 111, 229, 0.10); --bubble-me-edge: rgba(31, 111, 229, 0.28);
+  --bubble-them: #F0F3F8; --bubble-them-edge: #DFE5EE;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0C1622; --ink: #ECF1F8; --accent: #5B9BFF; --border: #24324A; --surface: #101B2B; --muted: #8A96A8;
+    --ok-bg: rgba(30, 142, 90, 0.18); --warn-bg: rgba(183, 121, 31, 0.2);
+    --danger-bg: rgba(192, 57, 43, 0.2); --neutral-bg: rgba(138, 150, 168, 0.16);
+    --li: #6BAEF5; --li-bg: rgba(107, 174, 245, 0.11);
+    --bubble-me: rgba(91, 155, 255, 0.17); --bubble-me-edge: rgba(91, 155, 255, 0.38);
+    --bubble-them: #18263A; --bubble-them-edge: #2A3B56;
+  }
+}
+* { box-sizing: border-box; }
+/* An id selector with display:flex outranks the [hidden] attribute, so hiding a panel by
+   setting .hidden = true silently did nothing. This is the standard guard. */
+[hidden] { display: none !important; }
+
+html, body { height: 100%; margin: 0; padding: 0; }
+body {
+  display: flex; flex-direction: column;
+  background: var(--paper); color: var(--ink);
+  font: 13px/1.45 -apple-system, "Helvetica Neue", Arial, sans-serif;
+}
+button, input, textarea, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- Top bar ---------- */
+#topbar { flex: 0 0 auto; background: var(--paper); border-bottom: 1px solid var(--border); padding: 10px 12px; }
+/* Eye on the left, everything else stacked to its right; the eye stretches to that stack's
+   height, so it grows when the filter pills are showing and shrinks when they are not. */
+#top-main { display: flex; align-items: stretch; gap: 8px; }
+#top-stack { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; }
+#health-row { display: flex; align-items: center; gap: 8px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+.dot.ok { background: var(--ok); }
+.dot.down { background: var(--danger); }
+#health-text { color: var(--muted); flex: 1; }
+.warning { margin-top: 6px; color: var(--warn); }
+.banner { margin-top: 6px; padding: 6px 8px; border: 1px solid var(--danger); color: var(--danger); border-radius: 4px; }
+/* Chrome sizes a flex item's width from its content, so aspect-ratio alone will not make this
+   square against a stretched height. The width is stated instead: the search row, the gap and
+   the pill row, which is exactly what the button spans. With the pills hidden it is one row. */
+#topbar { --search-h: 36px; --pill-h: 27px; --stack-gap: 8px; }
+#capture-btn { flex: 0 0 auto; align-self: stretch; padding: 0; justify-content: center;
+  width: calc(var(--search-h) + var(--stack-gap) + var(--pill-h));
+  border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--ink); }
+#top-main:has(#filter-row[hidden]) #capture-btn { width: var(--search-h); border-radius: 6px; }
+#capture-btn:hover { border-color: var(--accent); color: var(--accent); }
+#capture-btn .icon { width: 46%; height: 46%; }
+
+/* Search box: fills the row between the eye and the two icons on the right. */
+#search-box { flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: 6px; height: var(--search-h); padding: 0 8px 0 10px;
+  border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--muted); }
+#search-box:focus-within { border-color: var(--accent); }
+#search-box .icon { width: 15px; height: 15px; flex: 0 0 auto; }
+#search-input { flex: 1 1 0; min-width: 0; border: 0; background: transparent; padding: 0; outline: none; color: var(--ink); font-size: 13px; }
+#search-input::placeholder { color: var(--muted); }
+#search-input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; width: 12px; height: 12px; cursor: pointer;
+  background: var(--muted); -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round'><line x1='6' y1='6' x2='18' y2='18'/><line x1='18' y1='6' x2='6' y2='18'/></svg>") center / contain no-repeat; }
+.search-note { margin-top: 6px; color: var(--muted); font-size: 12px; }
+
+/* Group headings inside the list: a quiet label and a count, not a card. */
+.group-head { display: flex; align-items: baseline; gap: 6px; padding: 10px 2px 4px; font-size: 11px;
+  font-weight: 600; letter-spacing: 0.02em; color: var(--muted); }
+.group-head:first-child { padding-top: 2px; }
+.group-head[data-group="needs"] { color: var(--accent); }
+.group-head[data-group="captured"] { color: var(--ink); }
+.group-head[data-group="here"] { color: var(--li); }
+/* What the panel already knows about a posting you just captured again. */
+.seen-row { border: 1px solid var(--warn); background: var(--warn-bg); border-radius: 6px; padding: 8px 10px; margin-bottom: 10px; }
+.seen-text { font-size: 12px; color: var(--ink); margin-bottom: 8px; }
+.seen-row .action-pair > button { min-height: 36px; }
+.group-count { font-weight: 700; }
+
+/* ---------- Filter row ---------- */
+#filter-row { display: flex; gap: 4px; margin-top: var(--stack-gap); height: var(--pill-h); min-width: 0; }
+/* Like Apple Mail : the chosen filter shows its icon, name and count; the others
+   are icon-only pills, named on hover and to screen readers. Four fit beside the full-size eye. */
+.filter-btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 999px; padding: 0 10px; font-size: 12px; color: var(--muted);
+  flex: 0 0 auto; white-space: nowrap; }
+.filter-btn .icon { width: 14px; height: 14px; }
+.filter-btn:not(.active) { width: 34px; padding: 0; }
+.filter-btn:not(.active) .filter-label, .filter-btn:not(.active) .filter-count { display: none; }
+.filter-btn:hover:not(:disabled) { border-color: var(--accent); }
+.filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.filter-count { font-weight: 700; margin-left: 3px; }
+
+/* ---------- Settings row ---------- */
+/* Wraps rather than overflowing: the panel is 400px at its narrowest and this row used to
+   push its last control off the edge. */
+#settings-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 8px;
+  padding-top: 8px; border-top: 1px solid var(--border); color: var(--muted); }
+#settings-btn, #auto-badge { flex: 0 0 auto; width: 36px; height: 36px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; color: var(--muted); border: 1px solid transparent; border-radius: 6px; cursor: pointer; }
+#settings-btn:hover, #settings-btn[aria-expanded="true"] { color: var(--ink); border-color: var(--border); }
+/* Bell: the count of outreach waiting on you. Quiet at zero, accent when something waits. */
+#bell-btn { flex: 0 0 auto; position: relative; width: 36px; height: 36px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; color: var(--muted); border: 1px solid transparent; border-radius: 6px; cursor: pointer; }
+#bell-btn:hover { color: var(--ink); border-color: var(--border); }
+#bell-btn.has-count { color: var(--accent); }
+#bell-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.bell-count { position: absolute; top: 2px; right: 1px; min-width: 16px; height: 16px; padding: 0 4px;
+  border-radius: 8px; background: var(--accent); color: #fff; font-size: 10px; font-weight: 600;
+  line-height: 16px; text-align: center; }
+/* Built elsewhere and the outreach prompt on a card. */
+.external-row { margin-top: 8px; }
+.external-row.open { display: flex; flex-direction: column; gap: 6px; }
+.external-input { width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px;
+  background: var(--surface); color: var(--ink); }
+.external-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.link-btn { background: none; border: none; padding: 2px 0; color: var(--accent); cursor: pointer; font: inherit; }
+.link-btn:hover { text-decoration: underline; }
+.link-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+.outreach-prompt, .outreach-row { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 8px; }
+.outreach-row.muted { flex-direction: row; align-items: center; gap: 6px; color: var(--muted); }
+.outreach-q { font-weight: 600; }
+.external-path { color: var(--muted); word-break: break-all; }
+/* Auto-build switch: green means jobs can build without asking, grey means they wait. */
+#auto-badge { margin-left: 2px; }
+#auto-badge .icon { width: 18px; height: 18px; }
+#auto-badge:hover { color: var(--ink); border-color: var(--border); }
+#auto-badge.on { color: #fff; background: var(--ok); border-color: var(--ok); }
+#auto-badge.on:hover { filter: brightness(1.08); }
+#auto-badge:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.settings-item { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.settings-item input[type="checkbox"] { width: 15px; height: 15px; margin: 0; accent-color: var(--accent); }
+
+/* The native select rendered as a white slab in dark mode. Themed, with its own chevron. */
+#settings-row select,
+#settings-row input[type="number"] {
+  appearance: none; -webkit-appearance: none;
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--border); border-radius: 5px;
+  padding: 4px 8px; font-size: 12px; line-height: 1.2; cursor: pointer;
+}
+#settings-row input[type="number"] { width: 46px; text-align: center; cursor: text; }
+#settings-row select {
+  padding-right: 22px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237D8794' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat; background-position: right 6px center;
+}
+#settings-row select:hover, #settings-row input[type="number"]:hover { border-color: var(--accent); }
+#settings-row select:focus-visible, #settings-row input[type="number"]:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 1px;
+}
+#threshold-input { width: 48px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 2px 4px; }
+
+/* ---------- Buttons ---------- */
+button {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 4px;
+  padding: 5px 10px; cursor: pointer;
+}
+button:hover:not(:disabled) { border-color: var(--accent); }
+button:disabled { opacity: 0.5; cursor: default; }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* One full-width primary action per expanded card. */
+.primary-action-btn { width: 100%; justify-content: center; padding: 10px 12px; font-size: 13px; font-weight: 600; border-radius: 8px; }
+.primary-with-check { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.primary-with-check .primary-action-btn { flex: 1 1 auto; width: auto; min-width: 0; }
+.primary-note { margin-top: 6px; }
+
+/* Secondary actions: small text buttons on one line, not full buttons. */
+/* Secondary actions are buttons, not hyperlinks. Text links are a poor target and read as
+   navigation when these are all state changes. One counterpart action fills the row; the rare
+   one is a square icon button beside it. */
+.secondary-actions { display: flex; gap: 8px; margin-top: 8px; align-items: stretch; }
+.btn-secondary {
+  flex: 1 1 auto; min-height: 40px; padding: 8px 12px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: transparent; color: var(--ink);
+  border: 1px solid var(--border); border-radius: 6px; cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.btn-secondary:hover:not(:disabled) { border-color: var(--accent); background: var(--hover, rgba(127,127,127,0.08)); }
+.btn-secondary:disabled { opacity: 0.5; cursor: default; }
+.btn-icon {
+  flex: 0 0 auto; width: 40px; min-height: 40px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; color: var(--muted);
+  border: 1px solid var(--border); border-radius: 6px; cursor: pointer;
+}
+.btn-icon:hover:not(:disabled) { border-color: var(--accent); color: var(--ink); background: var(--hover, rgba(127,127,127,0.08)); }
+
+/* A full-width toggle row, used for the cover-letter option above the build button. */
+.toggle-row {
+  display: flex; align-items: center; gap: 10px; cursor: pointer;
+  min-height: 40px; padding: 8px 10px; margin-bottom: 8px; width: 100%; box-sizing: border-box;
+  border: 1px solid var(--border); border-radius: 6px; font-weight: 400;
+}
+.toggle-row:hover { background: var(--hover, rgba(127,127,127,0.08)); }
+.toggle-row:has(input:checked) { border-color: var(--accent); background: var(--accent-soft, rgba(31,111,229,0.10)); }
+.toggle-row input { width: 16px; height: 16px; margin: 0; flex: 0 0 auto; accent-color: var(--accent); }
+
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* ---------- Icons ---------- */
+.icon { width: 16px; height: 16px; flex-shrink: 0; display: inline-block; color: currentColor; }
+.icon svg { display: block; width: 100%; height: 100%; }
+
+/* ---------- Jobs list (own scroll container so card headers can stick within it) ---------- */
+/* No top padding: a sticky child stops at the content box, so a padded strip would let
+   scrolling text show above the frozen header. The first card carries the gap instead. */
+#jobs-list, #li-view { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 12px 40px; display: flex; flex-direction: column; gap: 10px; }
+#jobs-list > :first-child, #li-view > :first-child { margin-top: 10px; }
+
+/* ---------- LinkedIn mode ----------
+   LinkedIn blue marks this mode, matching the dashboard's LinkedIn cards. */
+#li-btn { flex: 0 0 auto; position: relative; width: 36px; height: 36px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; color: var(--muted); border: 1px solid transparent; border-radius: 6px; cursor: pointer; }
+#li-btn:hover { color: var(--ink); border-color: var(--border); }
+#li-btn.has-count { color: var(--li); }
+#li-btn .bell-count { background: var(--li); }
+#li-btn[aria-pressed="true"] { background: var(--li); border-color: var(--li); color: #fff; }
+#li-btn[aria-pressed="true"] .bell-count { background: #fff; color: var(--li); }
+#li-view .group-head.li-job { color: var(--ink); padding-top: 12px; }
+.li-row { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--li); border-radius: 6px;
+  padding: 10px 10px 10px 11px; display: flex; flex-direction: column; gap: 6px; }
+.li-row.here { background: var(--li-bg); border-color: var(--li); }
+.li-who { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.li-name { padding: 0; border: 0; background: none; color: var(--li); font-weight: 600; font-size: 14px; text-align: left; cursor: pointer; }
+.li-name:hover:not(:disabled) { text-decoration: underline; }
+.li-here { font-size: 11px; font-weight: 600; color: var(--li); white-space: nowrap; }
+.li-title { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.li-why { font-size: 12px; }
+.li-note { width: 100%; resize: vertical; padding: 7px 8px; border: 1px solid var(--border); border-radius: 4px;
+  background: var(--paper); color: var(--ink); line-height: 1.45; }
+.li-note:focus-visible { outline: 2px solid var(--li); outline-offset: 0; }
+.li-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.li-chars { flex: 1 1 auto; color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.li-actions button.primary { background: var(--li); border-color: var(--li); }
+.li-err { color: var(--danger); font-size: 12px; }
+.empty-state { color: var(--muted); padding: 24px 4px; }
+
+/* ---------- Card ---------- */
+/* flex:0 0 auto is load-bearing: as a shrinkable flex item the card was being squashed below
+   its content height, so text overflowed the card box and painted around the sticky header.
+   Never use overflow:hidden here; it would make the card a scroll container and kill sticky. */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; flex: 0 0 auto; }
+.card.collapsed .card-body { display: none; }
+
+/* Collapsed card is just this header: title+score, company/location+recommendation,
+   stage dots+status sentence. About 72px tall. Whole thing is the toggle. */
+.card-header {
+  position: sticky; top: 0; z-index: 3;
+  padding: 10px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+}
+.card.collapsed .card-header { border-radius: 6px; border-bottom-color: transparent; }
+
+.card-title-row, .card-sub-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.card-title {
+  flex: 1; min-width: 0; font-size: 14px; font-weight: 700; margin: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.card-sub { flex: 1; min-width: 0; color: var(--muted); font-size: 12px; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card-score { font-size: 16px; font-weight: 700; flex-shrink: 0; line-height: 1; }
+.card-rec { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; flex-shrink: 0; }
+.card-score.tone-ok, .card-rec.tone-ok { color: var(--ok); }
+.card-score.tone-warn, .card-rec.tone-warn { color: var(--warn); }
+.card-score.tone-muted, .card-rec.tone-muted { color: var(--muted); }
+
+/* ---------- Stage dots ---------- */
+.card-stage-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.stage-dots { display: flex; align-items: center; flex: 0 0 auto; }
+.stage-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
+.stage-dot.done { background: var(--accent); }
+.stage-dot.skipped { background: var(--border); }
+.stage-dot.active { background: var(--accent); animation: dot-pulse 1.2s ease-in-out infinite; }
+@keyframes dot-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+.stage-connector { width: 12px; height: 2px; background: var(--border); flex-shrink: 0; }
+.stage-connector.done { background: var(--accent); }
+/* Status at a glance: one icon, one colour, the sentence in the same colour beside it. */
+.status-icon { flex: 0 0 auto; width: 15px; height: 15px; }
+.status-icon.tone-accent { color: var(--accent); }
+.status-icon.tone-ok { color: var(--ok); }
+.status-icon.tone-warn { color: var(--warn); }
+.status-icon.tone-danger { color: var(--danger); }
+.status-icon.tone-muted { color: var(--muted); }
+.stage-status-text { color: var(--muted); font-size: 12px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stage-status-text.tone-accent { color: var(--accent); }
+.stage-status-text.tone-ok { color: var(--ok); }
+.stage-status-text.tone-warn { color: var(--warn); }
+.stage-status-text.tone-danger { color: var(--danger); }
+.stage-status-text.error-text { color: var(--danger); white-space: normal; }
+
+/* ---------- Card body ---------- */
+.card-body { padding: 10px 12px 10px; display: flex; flex-direction: column; gap: 10px; }
+
+/* ---------- Verdict chips ---------- */
+.chips-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; border: 1px solid transparent; }
+.chip.tone-ok { background: var(--ok-bg); color: var(--ok); }
+.chip.tone-warn { background: var(--warn-bg); color: var(--warn); }
+.chip.tone-danger { background: var(--danger-bg); color: var(--danger); }
+.chip.tone-neutral { background: var(--neutral-bg); color: var(--muted); }
+
+/* ---------- Collapsible sections ---------- */
+.section-details { border-top: 1px solid var(--border); padding-top: 8px; }
+.section-details > summary { cursor: pointer; font-weight: 600; font-size: 13px; }
+.section-body { margin-top: 6px; }
+.meta-line { color: var(--muted); margin-top: 2px; }
+.mono { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; }
+.folder-line { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+.folder-line .mono { flex: 1; overflow-wrap: anywhere; }
+details.preview { margin-top: 6px; }
+details.preview summary { font-weight: 400; color: var(--muted); cursor: pointer; }
+details.preview pre { white-space: pre-wrap; background: var(--paper); border: 1px solid var(--border); border-radius: 4px; padding: 6px; margin-top: 4px; }
+.muted { color: var(--muted); }
+.list-compact { margin: 4px 0 0; padding-left: 18px; }
+.list-compact li { margin-bottom: 2px; }
+pre.brief { white-space: pre-wrap; background: var(--paper); border: 1px solid var(--border); border-radius: 4px; padding: 8px; margin-top: 6px; }
+
+.error-text { color: var(--danger); margin-top: 2px; }
+
+textarea { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 6px; resize: vertical; min-height: 50px; }
+.row { display: flex; gap: 8px; align-items: center; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; align-items: center; }
+
+/* ---------- Questions (radios) ---------- */
+.questions-block { border-top: 1px solid var(--border); padding-top: 10px; display: flex; flex-direction: column; gap: 12px; }
+.question-item { display: flex; flex-direction: column; gap: 4px; }
+.question-text { font-weight: 600; }
+.question-why { font-size: 12px; }
+/* The whole row is the target, not the 13px radio. Answering these is the fiddliest thing in
+   the flow, so each option is a full-width button-sized hit area with a visible selected state. */
+.question-options { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.question-option {
+  display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 400;
+  min-height: 40px; padding: 8px 10px; width: 100%; box-sizing: border-box;
+  border: 1px solid var(--border); border-radius: 6px; background: transparent;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.question-option:hover { background: var(--hover, rgba(127,127,127,0.08)); }
+.question-option:has(input:checked) { border-color: var(--accent); background: var(--accent-soft, rgba(31,111,229,0.10)); }
+.question-option:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+.question-option input { width: 16px; height: 16px; flex: 0 0 auto; margin: 0; accent-color: var(--accent); }
+.question-option span { flex: 1; }
+.remember-check {
+  display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px;
+  margin-top: 6px; cursor: pointer; min-height: 36px; padding: 6px 10px;
+  border-radius: 6px; box-sizing: border-box;
+}
+.remember-check:hover { background: var(--hover, rgba(127,127,127,0.08)); }
+.remember-check input { width: 16px; height: 16px; flex: 0 0 auto; margin: 0; accent-color: var(--accent); }
+
+/* ---------- Live build progress ---------- */
+.build-progress { margin-top: 4px; }
+.build-progress-track { height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
+.build-progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.6s ease; }
+.build-progress-meta { display: flex; justify-content: space-between; gap: 8px; margin-top: 5px;
+  font-size: 12px; color: var(--muted); }
+.build-progress-phase { color: var(--ink); }
+.build-progress-stall { color: var(--warn); margin-top: 4px; font-size: 12px; }
+.question-note-wrap { display: flex; flex-direction: column; gap: 4px; }
+
+/* ---------- Ask thread ---------- */
+/* A conversation, read at a glance : your messages sit right in an accent-tinted bubble,
+   Claude's left in a neutral one a step off the card, each with its corner tucked toward its side. */
+.ask-thread { display: flex; flex-direction: column; gap: 10px; margin: 10px 0 12px; }
+.msg { border-radius: 12px; padding: 9px 12px; border: 1px solid transparent; line-height: 1.5; }
+.msg.user { background: var(--bubble-me); border-color: var(--bubble-me-edge); color: var(--ink);
+  align-self: flex-end; max-width: 85%; white-space: pre-wrap; border-bottom-right-radius: 4px; }
+.msg.assistant { background: var(--bubble-them); border-color: var(--bubble-them-edge); color: var(--ink);
+  align-self: flex-start; max-width: 95%; border-bottom-left-radius: 4px; }
+.msg.assistant .code-block { background: var(--surface); }
+.md p { margin: 4px 0; }
+.md-list { margin: 4px 0; padding-left: 18px; }
+.copy-box { position: relative; }
+.copy-btn { margin-top: 4px; font-size: 11px; padding: 2px 7px; }
+.code-block { white-space: pre-wrap; background: var(--paper); border: 1px solid var(--border); border-radius: 4px; padding: 6px; margin: 4px 0 0; overflow-x: auto; }
+/* The box and its send button share one height and one edge; the button is the icon alone. */
+.ask-input-row { display: flex; gap: 8px; align-items: stretch; }
+.ask-input-row .ask-input { flex: 1 1 0; min-width: 0; min-height: 44px; resize: vertical; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 6px; padding: 10px 10px; font-size: 13px; line-height: 1.4; color: var(--ink); }
+.ask-input-row .ask-input:focus { outline: none; border-color: var(--accent); }
+.ask-input-row .ask-send { flex: 0 0 44px; width: 44px; min-height: 44px; align-self: stretch; border-radius: 6px;
+  background: var(--accent); border-color: var(--accent); color: #fff; }
+.ask-input-row .ask-send:hover:not(:disabled) { filter: brightness(1.08); color: #fff; }
+.ask-input-row .ask-send .icon { width: 18px; height: 18px; }
+/* Each answer ends with a small copy icon at the bottom left. */
+.msg.assistant { display: flex; flex-direction: column; gap: 6px; padding-bottom: 8px; }
+.answer { position: relative; padding-bottom: 30px; }
+.answer + .answer { border-top: 1px solid var(--bubble-them-edge); padding-top: 10px; }
+.msg-copy { position: absolute; left: 0; bottom: 0; }
+.msg-copy.copied { color: var(--ok); border-color: var(--ok); }
+.msg .user-text { white-space: pre-wrap; }
+.md .md-q { font-weight: 600; color: var(--muted); font-size: 12px; margin: 10px 0 2px; }
+.md p { margin: 0 0 8px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+/* ---------- Why: the quick read ---------- */
+.why-take { margin: 2px 0 8px; line-height: 1.45; }
+.why-list { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+.why-list li { position: relative; padding-left: 20px; line-height: 1.4; }
+.why-list li::before { position: absolute; left: 2px; top: 0; font-weight: 700; }
+.why-plus::before { content: '+'; color: var(--ok); }
+.why-minus::before { content: '\2212'; color: var(--warn); }   /* a real minus sign, not a dash */
+.why-keywords { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+.why-more > summary { color: var(--muted); font-size: 12px; font-weight: 500; }
+
+/* ---------- Working timer: shown only while something runs, then gone ---------- */
+.working-timer { display: flex; align-items: baseline; gap: 8px; margin-top: 4px; font-size: 12px; color: var(--muted); }
+.working-timer .elapsed { font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 600; }
+.working-timer .usually { font-variant-numeric: tabular-nums; }
+
+/* ---------- Reasoning cards ---------- */
+.why-inline { margin-top: 10px; }
+.why-card { border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; background: var(--surface); }
+.why-card-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+.why-card .why-list { margin: 0; }
+
+/* ---------- Decision row: Skip left, build right, same height ---------- */
+.action-area { margin-top: 10px; margin-bottom: 4px; }
+.action-pair { display: flex; gap: 8px; }
+.action-pair > button { flex: 1 1 0; min-height: 44px; justify-content: center; text-align: center; }
+.action-pair > button .icon { width: 17px; height: 17px; }
+.action-pair > .btn-secondary { color: var(--ink); }
+.primary-note { margin-bottom: 8px; }
+
+/* ---------- Built card: the page itself, with an eye on hover ---------- */
+.thumb-row { display: flex; gap: 24px; align-items: flex-start; justify-content: center; margin-bottom: 10px; }
+.thumb {
+  position: relative; flex: 0 0 auto; width: 120px; aspect-ratio: 8.5 / 11; padding: 0;
+  border: 1px solid var(--border); border-radius: 4px; overflow: hidden; background: #fff; cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+.thumb-img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.thumb-eye {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(22, 32, 46, 0.45); color: #fff; opacity: 0; transition: opacity 0.12s ease;
+}
+.thumb-eye .icon { width: 26px; height: 26px; }
+.thumb:hover .thumb-eye, .thumb:focus-visible .thumb-eye { opacity: 1; }
+.doc-tile { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 120px; }
+.doc-caption { font-size: 11px; color: var(--muted); }
+.doc-error { font-size: 11px; text-align: center; }
+.thumb[draggable="true"] { cursor: grab; }
+.thumb[draggable="true"]:active { cursor: grabbing; }
+/* The missing cover letter: a dashed box the same size as a page, a plus and three words. */
+.thumb.thumb-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  background: transparent; border: 1.5px dashed var(--border); box-shadow: none; color: var(--muted);
+  padding: 8px; text-align: center; cursor: pointer;
+}
+.thumb.thumb-empty:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.thumb.thumb-empty .icon { width: 22px; height: 22px; }
+.thumb-empty-label { font-size: 11px; line-height: 1.3; }
+.thumb.thumb-empty.busy { cursor: default; border-style: solid; }
+.thumb.thumb-empty.busy .working-timer { flex-direction: column; font-size: 11px; }
+.thumb.revising .thumb-img { opacity: 0.35; }
+.thumb-working { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--ink); }
+.thumb-working .working-timer { flex-direction: column; font-size: 11px; }
+.small-note { font-size: 11px; }
+.questions-note { font-size: 12px; margin-bottom: 8px; }
+
+/* Skip as a small square beside the full-width Mark submitted. */
+.submit-row > .skip-small { flex: 0 0 44px; width: 44px; min-height: 44px; color: var(--muted); }
+.submit-row > .skip-small:hover:not(:disabled) { color: var(--danger); border-color: var(--danger); }
+.submit-row > .skip-small .icon { width: 16px; height: 16px; }
+
+/* Feedback on a document */
+.feedback-details { margin-top: 10px; }
+.feedback { display: flex; flex-direction: column; gap: 8px; }
+.fb-choice { display: flex; gap: 6px; }
+.fb-chip { border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; font-size: 12px; color: var(--muted); background: var(--surface); }
+.fb-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.fb-text { width: 100%; box-sizing: border-box; resize: vertical; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--ink); font-size: 13px; }
+.fb-text:focus { outline: none; border-color: var(--accent); }
+.fb-row { display: flex; }
+.fb-row > .btn-secondary { flex: 1 1 auto; min-height: 40px; }
+.fb-asks { font-size: 12px; color: var(--ink); background: var(--warn-bg); border-radius: 6px; padding: 8px 10px; }
+.fb-asks-title { font-weight: 600; margin-bottom: 4px; color: var(--warn); }
+@media (prefers-reduced-motion: reduce) { .thumb-eye { transition: none; } }
+
+/* "Open the posting" on a finished card: navigation, so an anchor, dressed as the secondary button. */
+a.btn-secondary { text-decoration: none; }
+
+.changed-row { margin-bottom: 8px; }
+.changed-row > .btn-secondary { border-color: var(--warn); color: var(--ink); }
+
+/* small folder icon in the header, under the score */
+.card-stage-row { display: flex; align-items: center; gap: 6px; }
+.card-stage-row .stage-status-text { flex: 1; }
+.btn-icon.btn-icon-sm { width: 28px; min-height: 28px; border-color: transparent; }
+.btn-icon.btn-icon-sm:hover { border-color: var(--border); }
+
+/* ---------- Build button tiers ---------- */
+.btn-secondary.btn-mid { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.btn-secondary.btn-mid:hover:not(:disabled) { background: var(--accent-soft, rgba(31,111,229,0.10)); }
+.btn-secondary.btn-low { color: var(--muted); border-color: var(--border); }
+.btn-secondary.btn-low:hover:not(:disabled) { color: var(--ink); }
+
+
+/* Evaluate again, armed by a first click: amber until the second click or the few seconds run out. */
+button.armed { border-color: var(--warn); color: var(--warn); background: var(--warn-bg); }
+.btn-icon.armed { width: auto; padding: 0 8px; }
+.armed-text { font-size: 11px; font-weight: 600; white-space: nowrap; }
+
+/* Mark submitted, pinned to the bottom of the panel while the card's own button is scrolled away. */
+/* bottom: -40px cancels #jobs-list's 40px bottom padding, which would otherwise hold the bar above the edge. */
+.submit-dock { position: sticky; bottom: -40px; z-index: 2; display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; background: var(--surface); border-top: 1px solid var(--border);
+  border-radius: 0 0 6px 6px; box-shadow: 0 -6px 14px rgba(0, 0, 0, 0.12); }
+.submit-dock-text { flex: 1 1 auto; color: var(--muted); font-size: 12px; }
+.submit-dock button.primary { padding: 7px 14px; font-weight: 600; }
+
+/* Where an applied job stands: a select, a note and Save, in one line. */
+.stage-row { display: flex; flex-direction: column; gap: 6px; }
+.stage-controls { display: flex; gap: 6px; align-items: stretch; }
+.stage-select { flex: 0 0 auto; padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--ink); }
+.stage-note { flex: 1 1 auto; min-width: 0; padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--ink); }
+.stage-select:focus-visible, .stage-note:focus { outline: none; border-color: var(--accent); }
+.stage-save { flex: 0 0 auto; }
+.stage-last { color: var(--muted); font-size: 12px; }
+
+
+/* ---------- A person captured from a LinkedIn profile  ---------- */
+/* Left-heavy: initials and identity on the left, one primary action under them. The card is a work surface, so it is calm:
+   no gradient, the LinkedIn blue appears only on the edge and the initials. */
+.person-card { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--li); border-radius: 8px;
+  padding: 12px; margin-bottom: 8px; display: flex; flex-direction: column; align-items: stretch; gap: 8px; }
+.pc-head { display: flex; align-items: flex-start; gap: 10px; }
+.pc-avatar { flex: none; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: var(--li-bg); color: var(--li); font-size: 14px; font-weight: 700; letter-spacing: 0.02em; }
+.pc-id { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.pc-name { font-size: 15px; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; text-wrap: balance; }
+.pc-title { overflow-wrap: anywhere; text-wrap: pretty; }
+.pc-where { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.pc-x { flex: none; width: 32px; height: 32px; margin: -4px -4px 0 0; padding: 0; justify-content: center;
+  border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; }
+.pc-x:hover:not(:disabled) { color: var(--ink); background: var(--neutral-bg); }
+.pc-x .icon { width: 14px; height: 14px; }
+.pc-status { display: flex; align-items: flex-start; gap: 6px; color: var(--ink); }
+.pc-status .icon { flex: none; width: 16px; height: 16px; margin-top: 1px; }
+.pc-status.ok .icon { color: var(--ok); }
+.pc-status.warn, .pc-note.warn { color: var(--warn); }
+.pc-note, .pc-hint { color: var(--muted); font-size: 12px; text-wrap: pretty; }
+.pc-hint { flex: 1 1 100%; }
+/* Real buttons, 40px tall, with a visible press and focus. Named transitions only. */
+.person-card button { transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease, transform 0.12s ease; }
+.person-card button:active:not(:disabled) { transform: scale(0.98); }
+.person-card .btn-secondary, .person-card button.primary { min-height: 40px; justify-content: center; }
+.pc-primary { width: 100%; text-align: left; justify-content: flex-start; padding: 8px 12px; border-radius: 6px; font-weight: 600; line-height: 1.3; }
+.pc-primary .pc-label { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.pc-primary .icon { flex: none; }
+.pc-second { width: 100%; }
+.pc-pair > button { min-height: 40px; }
+.pc-danger { color: var(--danger); }
+.pc-danger:hover:not(:disabled) { border-color: var(--danger); }
+.pc-ghost { align-self: flex-start; min-height: 32px; padding: 4px 8px 4px 6px; margin-left: -6px; border: 0; background: transparent; color: var(--accent); }
+.pc-ghost:hover:not(:disabled) { background: var(--neutral-bg); }
+.pc-ghost .icon { width: 15px; height: 15px; }
+.person-card .link-btn { display: inline; padding: 2px 0; }
+/* The job list: one row per job, radio style, scrolls inside the card. Not a native select, which is unreliable in a side panel. */
+.pc-jobs { display: flex; flex-direction: column; gap: 2px; max-height: 260px; overflow-y: auto; padding: 4px; border: 1px solid var(--border); border-radius: 6px; background: var(--paper); }
+.pc-jobs > * { flex: none; }
+.pc-group { padding: 6px 6px 2px; font-size: 11px; font-weight: 600; color: var(--muted); }
+.pc-job { width: 100%; min-height: 44px; padding: 6px 8px; gap: 10px; align-items: center; justify-content: flex-start; text-align: left; border: 1px solid transparent; border-radius: 4px; background: transparent; }
+.pc-job:hover:not(:disabled) { background: var(--neutral-bg); border-color: transparent; }
+.pc-job.sel { background: var(--surface); border-color: var(--accent); }
+.pc-radio { flex: none; width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--muted); position: relative; }
+.pc-job.sel .pc-radio { border-color: var(--accent); }
+.pc-job.sel .pc-radio::after { content: ""; position: absolute; inset: 2px; border-radius: 50%; background: var(--accent); }
+.pc-job-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.pc-job-co { font-weight: 600; overflow-wrap: anywhere; }
+.pc-job-title { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.pc-tag { flex: none; font-size: 11px; padding: 1px 6px; border-radius: 10px; background: var(--neutral-bg); color: var(--muted); }
+.pc-tag.warn { background: var(--warn-bg); color: var(--warn); }
+.pc-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.pc-actions > button { flex: 1 1 auto; }
+.pc-email { display: flex; align-items: center; gap: 6px; overflow-wrap: anywhere; }
+.pc-email .icon { flex: none; width: 15px; height: 15px; color: var(--muted); }
+.pc-email-btn { width: 100%; }
+.pc-email-btn .pc-label { flex: 1 1 auto; text-align: left; }
+.pc-price { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.person-card .icon { display: inline-flex; width: 16px; height: 16px; }
+.person-card .icon svg { width: 100%; height: 100%; }
+@media (prefers-reduced-motion: reduce) { .person-card button { transition: none; } .person-card button:active:not(:disabled) { transform: none; } }
+
+/* Saved contacts offered on an applied job's card (step 14, item 4). */
+.saved-contacts { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; border: 1px solid var(--border); border-left: 3px solid var(--li); border-radius: 6px; background: var(--surface); }
+.sc-head { font-size: 12px; font-weight: 600; color: var(--muted); }
+.sc-row { display: flex; align-items: center; gap: 8px; }
+.sc-who { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.sc-name { font-weight: 600; overflow-wrap: anywhere; }
+.sc-title { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.sc-row > button { flex: none; min-height: 36px; }
+
+/* Settings: the server address field. */
+.settings-server { flex-wrap: wrap; }
+.settings-server input[type="text"] { flex: 1 1 12em; min-width: 0; font: inherit; }

@@ -1,0 +1,1853 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Job search</title>
+<style>
+:root {
+  --grid: #E9EDF3; --edge: rgba(22, 32, 46, 0.35);
+  --paper: #F4F6FB; --ink: #16202E; --accent: #1F6FE5; --muted: #6B7686;
+  --border: #D9DEE7; --danger: #C0392B; --ok: #1E8E5A; --warn: #B7791F; --surface: #FFFFFF;
+  --ok-bg: rgba(30, 142, 90, 0.12); --warn-bg: rgba(183, 121, 31, 0.14);
+  --danger-bg: rgba(192, 57, 43, 0.12); --neutral-bg: rgba(107, 118, 134, 0.12);
+  --hover: rgba(127, 127, 127, 0.08); --accent-soft: rgba(31, 111, 229, 0.10);
+  --on-accent: #FFFFFF; --scrim: rgba(22, 32, 46, 0.45); --shadow: 0 8px 28px rgba(22, 32, 46, 0.18);
+  --email: #C0392B; --email-bg: rgba(192, 57, 43, 0.07); --li: #0A66C2; --li-bg: rgba(10, 102, 194, 0.08);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --grid: #1A2637; --edge: rgba(0, 0, 0, 0.6);
+    --paper: #0C1622; --ink: #ECF1F8; --accent: #5B9BFF; --border: #24324A; --surface: #101B2B; --muted: #8A96A8;
+    --ok-bg: rgba(30, 142, 90, 0.18); --warn-bg: rgba(183, 121, 31, 0.2);
+    --danger-bg: rgba(192, 57, 43, 0.2); --neutral-bg: rgba(138, 150, 168, 0.16);
+    --accent-soft: rgba(91, 155, 255, 0.14); --on-accent: #0C1622; --scrim: rgba(0, 0, 0, 0.6); --shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+    --email: #F07A6C; --email-bg: rgba(240, 122, 108, 0.10); --li: #6BAEF5; --li-bg: rgba(107, 174, 245, 0.11);
+  }
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; padding: 0; overflow-x: clip; }
+body { background: var(--paper); color: var(--ink); font: 13px/1.45 -apple-system, "Helvetica Neue", Arial, sans-serif; min-height: 100vh; }
+button, input, textarea, select { font: inherit; color: inherit; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.muted { color: var(--muted); }
+.mono { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; }
+.num { font-variant-numeric: tabular-nums; }
+.icon { width: 16px; height: 16px; flex-shrink: 0; display: inline-block; color: currentColor; }
+.icon svg { display: block; width: 100%; height: 100%; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* ---------- Buttons ---------- */
+button, .btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+  padding: 0 12px; min-height: 36px; cursor: pointer; text-decoration: none; color: var(--ink);
+  transition: border-color 0.12s ease, background-color 0.12s ease, color 0.12s ease;
+  white-space: nowrap;
+}
+button:hover:not(:disabled), .btn:hover { border-color: var(--accent); text-decoration: none; }
+button:active:not(:disabled) { background: var(--hover); }
+button:disabled { opacity: 0.5; cursor: default; }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+.btn-primary:hover:not(:disabled) { filter: brightness(1.08); }
+.btn-approve { min-height: 44px; padding: 0 30px; font-size: 14px; font-weight: 700; border-radius: 8px; }
+.btn-sm { min-height: 30px; padding: 0 10px; font-size: 12px; }
+.btn-quiet { background: transparent; }
+.btn-icon { width: 36px; padding: 0; }
+
+/* ---------- Waiting strip ---------- */
+#strip { position: sticky; top: 0; z-index: 10; background: var(--surface); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; flex-wrap: wrap; gap: 6px 22px; padding: 10px 16px; min-height: 58px; }
+.strip-label { font-size: 11px; font-weight: 600; letter-spacing: 0.02em; color: var(--muted); }
+.strip-counts { display: flex; flex-wrap: wrap; gap: 6px 22px; align-items: baseline; }
+.wait-item { display: inline-flex; align-items: baseline; gap: 6px; color: var(--ink); border-radius: 4px; }
+.wait-item:hover { text-decoration: none; }
+.wait-item:hover .wait-text { text-decoration: underline; }
+.wait-num { font-size: 22px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.wait-item.approve .wait-num { color: var(--accent); }
+.wait-item.failed .wait-num { color: var(--danger); }
+.wait-item.people .wait-num { color: var(--accent); }
+.wait-item.inbox .wait-num { color: var(--accent); }
+.strip-none { font-size: 14px; }
+.strip-right { margin-left: auto; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; color: var(--muted); }
+.strip-next { display: inline-flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
+.paused-mark { display: inline-flex; align-items: center; gap: 5px; background: var(--warn-bg); color: var(--warn); font-weight: 600; padding: 3px 9px; border-radius: 999px; }
+
+/* ---------- Tabs ---------- */
+#tabs { display: flex; gap: 2px; padding: 0 16px; border-bottom: 1px solid var(--border); background: var(--paper); }
+#tabs a { padding: 10px 14px 9px; color: var(--muted); font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -1px; border-radius: 4px 4px 0 0; }
+#tabs a:hover { color: var(--ink); text-decoration: none; }
+#tabs a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
+
+#down { display: flex; align-items: center; gap: 8px; margin: 12px 16px 0; padding: 8px 10px; border: 1px solid var(--danger); background: var(--danger-bg); color: var(--danger); border-radius: 6px; }
+#view { padding: 16px 20px 60px; }
+
+/* ---------- Jobs ---------- */
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 12px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; flex: 1 1 auto; }
+.chip-btn { border-radius: 999px; min-height: 28px; padding: 0 11px; font-size: 12px; color: var(--muted); }
+.chip-btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.chip-btn b { font-weight: 700; font-variant-numeric: tabular-nums; margin-left: 2px; }
+/* One line box for the label and the bold count, so they share a baseline: as separate flex
+   items the bold count sat half a pixel lower. */
+.chip-btn { display: inline-block; line-height: 26px; }
+.search { display: flex; align-items: center; gap: 6px; height: 34px; padding: 0 8px 0 10px; width: 260px; max-width: 100%;
+  border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--muted); }
+.search:focus-within { border-color: var(--accent); }
+.search input { flex: 1 1 0; min-width: 0; border: 0; background: transparent; padding: 0 0 1px; outline: none; color: var(--ink); }
+/* Optical alignment: the eye lines the magnifier's circle up with the lowercase letters, which sat
+   about 1.7px lower than the circle. Icon down 1px, text up half a pixel. */
+.search .icon { position: relative; top: 1px; }
+.search input::placeholder { color: var(--muted); }
+.search input:focus-visible { outline: none; }
+.search:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+table.jobs { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; }
+/* Pinned headers: tucked 1px under the strip and under each other, with their lines drawn as inset shadows. In a
+   collapsed-border table a border stays behind when its cell sticks, which let rows show through a sliver. */
+.jobs th { text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.02em; color: var(--muted); padding: 9px 12px; border-bottom: 0; white-space: nowrap;
+  position: sticky; top: calc(var(--strip-h, 0px) - 1px); z-index: 3; background: var(--surface); box-shadow: inset 0 -1px 0 var(--border); }
+.jobs td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.jobs thead th:first-child { border-top-left-radius: 6px; } .jobs thead th:last-child { border-top-right-radius: 6px; }
+.jobs tbody tr:last-child td { border-bottom: 0; }
+.jobs tbody tr:hover { background: var(--hover); }
+/* Group headers: a quiet band, not a row; the count sits beside the name. */
+.jobs tr.group-row th { text-align: left; font-size: 12px; font-weight: 600; color: var(--ink); background: var(--paper); padding: 7px 12px;
+  border: 0; letter-spacing: 0; box-shadow: inset 0 -1px 0 var(--border), inset 0 1px 0 var(--border);
+  /* Sticks right under the column headings (their measured height), so the group you are scrolling through stays named. */
+  top: calc(var(--strip-h, 0px) + var(--jobs-head-h, 35px) - 2px); z-index: 2; }
+.jobs tbody tr.group-row:hover { background: none; }
+.group-n { margin-left: 8px; color: var(--muted); font-weight: 500; font-variant-numeric: tabular-nums; }
+.c-date { width: 66px; white-space: nowrap; color: var(--muted); }
+.c-company { width: 210px; font-weight: 600; overflow-wrap: anywhere; }
+.co { display: flex; align-items: center; gap: 8px; position: relative; }
+.co-links { display: inline-flex; gap: 2px; flex: none; }
+.co-link { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; min-height: 0; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--muted); cursor: pointer; }
+.co-link .icon svg { width: 15px; height: 15px; }
+.co-link:hover { color: var(--accent); background: var(--hover); text-decoration: none; border: 0; }
+.co-link[aria-expanded="true"] { color: var(--accent); background: var(--accent-soft); }
+.co-pop { font-weight: 400; z-index: 8; }
+.co-form { display: flex; flex-direction: column; gap: 10px; }
+.co-cur { overflow-wrap: anywhere; font-size: 12px; }
+.co-link.is-off { opacity: 0.5; }
+.co-link.is-off:hover, .co-link.is-off[aria-expanded="true"] { opacity: 1; }
+a.co-name { color: var(--ink); }
+a.co-name:hover { color: var(--accent); }
+/* Share the width across the row instead of handing every spare pixel to Role (wide screens left a
+   gap between the title and its score). Percentages above the stacked breakpoint only. */
+@media (min-width: 1181px) {
+  table.jobs { table-layout: fixed; }
+  .jobs .c-date { width: 6%; } .jobs .c-company { width: 16%; } .jobs .c-role { width: 25%; min-width: 0; }
+  .jobs .c-score { width: 5%; } .jobs .c-status { width: 9%; } .jobs .c-inbox { width: 14%; } .jobs .c-pipe { width: 25%; }
+  .co-name { min-width: 0; }
+}
+/* Faint column lines, so a row reads across. */
+.jobs th + th, .jobs td + td { border-left: 1px solid var(--grid); }
+.fit { margin-right: 8px; font-variant-numeric: tabular-nums; }
+.fit b { font-weight: 800; }
+.fact { display: flex; align-items: flex-start; gap: 7px; }
+.fact .icon { flex: none; margin-top: 1px; }
+.fact .icon svg { width: 14px; height: 14px; }
+.c-role { min-width: 240px; }
+.c-score { width: 56px; font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; }
+.c-status { width: 132px; }
+.c-resume { width: 66px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.c-pipe { width: 260px; }
+.c-inbox { width: 130px; }
+.inbox-link { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; color: var(--muted); border-radius: 4px; }
+.inbox-link:hover { text-decoration: none; }
+.inbox-link:hover .pill { filter: brightness(0.95); }
+.inbox-link .when { font-variant-numeric: tabular-nums; }
+/* Handoff note: a link that opens the markdown as text, and a Copy for pasting it into claude.ai. */
+.handoff-links { display: flex; align-items: center; gap: 2px 4px; flex-wrap: wrap; margin-top: 3px; font-size: 12px; }
+.handoff-links a { font-size: 12px; font-weight: 500; }
+.handoff-links .icon-only { display: inline-grid; place-items: center; width: 24px; height: 24px; min-height: 0; padding: 0; border: 0;
+  border-radius: 4px; background: transparent; color: var(--muted); }
+.handoff-links .icon-only .icon, .handoff-links .icon-only svg { width: 14px; height: 14px; }
+.handoff-links .icon-only:hover:not(:disabled) { color: var(--accent); background: var(--hover); }
+.handoff-links .icon-only:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.handoff-links .icon-only.is-done { color: var(--ok); }
+.ic-head .handoff-links { margin-top: 0; }
+.handoff-links .err { flex-basis: 100%; }
+.needs-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--warn); flex: none; }
+/* The divider between the job and its outreach. */
+.jobs th.c-pipe, .jobs td.c-pipe { border-left: 2px solid var(--border); padding-left: 12px; }
+.pipe-cell { position: relative; }
+.pipe-btn { display: flex; flex-direction: column; align-items: stretch; gap: 7px; width: 100%; min-height: 44px; padding: 8px 10px;
+  background: transparent; border: 1px solid transparent; border-radius: 8px; white-space: normal; text-align: left;
+  transition: border-color 0.12s ease, background-color 0.12s ease; }
+.pipe-btn:hover:not(:disabled) { border-color: var(--border); background: var(--surface); }
+.pipe-btn.tone-you, .pipe-btn.tone-you:hover:not(:disabled) { background: var(--warn-bg); }
+.pipe-btn.tone-fail, .pipe-btn.tone-fail:hover:not(:disabled) { background: var(--danger-bg); }
+.pipe-track { position: relative; height: 12px; margin: 0 6px; }
+.pipe-line, .pipe-fill { position: absolute; left: 0; top: 5px; height: 2px; border-radius: 1px; }
+.pipe-line { right: 0; background: var(--border); }
+.pipe-fill { background: var(--ok); }
+.pipe-dot { position: absolute; top: 3px; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; }
+.pipe-dot.done { background: var(--ok); }
+.pipe-dot.todo { background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--border); }
+.pipe-cursor { position: absolute; top: 0; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--surface); transition: left 250ms cubic-bezier(0.77, 0, 0.175, 1); }
+.pipe-cursor.t-work, .pipe-cursor.t-sched { background: var(--accent); }
+.pipe-cursor.t-you { background: var(--warn); }
+.pipe-cursor.t-done { background: var(--ok); }
+.pipe-cursor.t-fail { background: var(--danger); }
+.pipe-cursor.t-idle { background: var(--muted); }
+.pipe-cursor.working { animation: pulse 1.2s linear infinite; }
+.pipe-label { font-size: 12px; font-weight: 600; line-height: 1.3; }
+.pipe-hold { font-size: 12px; font-weight: 600; line-height: 1.3; padding: 8px 10px; }
+.tone-work .pipe-label, .tone-sched .pipe-label, .panel-now.tone-work, .panel-now.tone-sched { color: var(--accent); }
+.tone-you .pipe-label, .panel-now.tone-you { color: var(--warn); }
+.tone-done .pipe-label, .panel-now.tone-done { color: var(--ok); }
+.tone-fail .pipe-label, .panel-now.tone-fail { color: var(--danger); }
+.tone-idle .pipe-label, .panel-now.tone-idle { color: var(--muted); }
+/* Hover or keyboard focus shows what is behind the stage without opening anything. */
+.pipe-tip { position: absolute; z-index: 5; left: 0; top: calc(100% + 4px); width: max-content; max-width: 280px; padding: 8px 10px;
+  background: var(--ink); color: var(--paper); border-radius: 6px; font-size: 12px; line-height: 1.45; box-shadow: var(--shadow);
+  opacity: 0; visibility: hidden; transform: translateY(-2px); pointer-events: none;
+  transition: opacity 150ms ease, transform 150ms ease, visibility 150ms; }
+@media (hover: hover) and (pointer: fine) { .pipe-cell:hover .pipe-tip { opacity: 1; visibility: visible; transform: none; } }
+.pipe-btn:focus-visible + .pipe-tip { opacity: 1; visibility: visible; transform: none; }
+.play-btn { gap: 9px; min-height: 40px; padding: 0 14px 0 5px; border-radius: 999px; font-weight: 600; color: var(--accent);
+  transition: border-color 0.12s ease, transform 120ms ease; }
+.play-btn:active:not(:disabled) { transform: scale(0.96); background: var(--surface); }
+.sp-wrap { position: relative; display: inline-block; }
+.start-pill { display: inline-flex; align-items: stretch; height: 40px; border: 1px solid var(--accent); border-radius: 999px;
+  background: var(--surface); overflow: hidden; }
+.start-pill > button { min-height: 0; height: 100%; border: 0; border-radius: 0; background: transparent; transition: background-color 0.12s ease; }
+.start-pill > button:hover:not(:disabled) { background: var(--hover); border: 0; }
+.start-pill > button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.sp-begin { gap: 8px; padding: 0 14px 0 4px; color: var(--accent); font-weight: 700; }
+.sp-opts { gap: 3px; padding: 0 8px 0 10px; border-left: 1px solid var(--border) !important; color: var(--muted); font-size: 12px; }
+.sp-opts .num { font-variant-numeric: tabular-nums; }
+.sp-opts .icon svg { width: 13px; height: 13px; }
+.sp-opts[aria-expanded="true"] .icon { transform: rotate(180deg); }
+.sp-cancel { width: 36px; padding: 0; border-left: 1px solid var(--border) !important; color: var(--muted); }
+.sp-cancel .icon svg { width: 14px; height: 14px; }
+.start-pill.is-busy { opacity: 0.7; }
+.sp-pop { position: absolute; z-index: 6; top: calc(100% + 6px); left: 0; width: 260px; padding: 12px; display: flex; flex-direction: column; gap: 10px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow); }
+.play-circle { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%;
+  background: var(--accent); color: var(--on-accent); }
+.play-circle .icon, .play-circle svg { width: 14px; height: 14px; }
+.play-circle .icon { margin-left: 2px; }   /* a triangle's visual centre sits right of its box centre */
+#people-dlg { width: min(1040px, calc(100vw - 24px)); }
+.panel-head { position: sticky; top: -4px; z-index: 4; margin: -4px -16px 14px; padding: 8px 16px 0; background: var(--surface);
+  border-bottom: 1px solid var(--border); box-shadow: 0 6px 10px -10px var(--edge); }
+.panel-pipe { padding: 4px 4px 12px; }
+.approve-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; padding: 10px 0 12px;
+  border-top: 1px solid var(--grid); }
+.approve-bar .section-head { margin: 0; }
+.group-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; margin-bottom: 8px; }
+.group-bar .group-head { margin: 0; }
+.pipe-track.big { height: 16px; margin: 6px 24px 0; }
+.pipe-track.big .pipe-line, .pipe-track.big .pipe-fill { top: 7px; }
+.pipe-track.big .pipe-dot { top: 5px; }
+.pipe-track.big .pipe-cursor { top: 1px; width: 14px; height: 14px; margin-left: -7px; }
+.pipe-names { display: grid; grid-template-columns: repeat(5, 1fr); margin-top: 6px; font-size: 11px; color: var(--muted); text-align: center; }
+.pipe-names .done { color: var(--ok); }
+.pipe-names .cur { font-weight: 700; }
+.pipe-names .cur.t-work, .pipe-names .cur.t-sched { color: var(--accent); }
+.pipe-names .cur.t-you { color: var(--warn); }
+.pipe-names .cur.t-fail { color: var(--danger); }
+.panel-now { display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 10px; font-weight: 700; font-size: 14px; }
+.panel-fail { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-bottom: 14px; }
+.panel-sec { margin-bottom: 18px; }
+.c-role a { font-weight: 500; overflow-wrap: anywhere; }
+.ext-folder { display: block; margin-top: 2px; color: var(--muted); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tone-ok { color: var(--ok); } .tone-muted { color: var(--muted); } .tone-danger { color: var(--danger); } .tone-warn { color: var(--warn); }
+.pill { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.pill.ok { background: var(--ok-bg); color: var(--ok); }
+.pill.warn { background: var(--warn-bg); color: var(--warn); }
+.pill.danger { background: var(--danger-bg); color: var(--danger); }
+.pill.neutral { background: var(--neutral-bg); color: var(--muted); }
+.pill.accent { background: var(--accent-soft); color: var(--accent); }
+.link-btn { min-height: 0; padding: 0; border: 0; background: transparent; color: var(--accent); text-align: left; border-radius: 3px; }
+.link-btn:hover:not(:disabled) { text-decoration: underline; border: 0; }
+.working { display: inline-flex; align-items: center; gap: 7px; color: var(--accent); }
+.working-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+.err { color: var(--danger); margin-top: 4px; overflow-wrap: anywhere; }
+.err.flush { margin: 0; }
+.err.full { flex: 1 1 100%; margin: 0; }
+.err.inrow { flex: 1 1 240px; margin: 0; }
+.muted.inrow { flex: 1 1 240px; }
+.person-title { font-weight: 400; }
+.mt6 { margin-top: 6px; }
+.empty.slim { max-width: 1120px; padding: 12px 14px; }
+body { text-wrap: pretty; }
+h2 { text-wrap: balance; }
+.inline-form { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; padding: 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--paper); }
+.field { display: flex; flex-direction: column; gap: 3px; }
+.field > span { font-size: 11px; font-weight: 600; color: var(--muted); }
+.field-row { display: flex; gap: 10px; }
+.field-row .field { flex: 1 1 0; min-width: 0; }
+input[type="text"], input[type="number"], input[type="url"], textarea {
+  width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 7px 9px; min-height: 34px; }
+textarea { resize: vertical; line-height: 1.5; }
+input:focus, textarea:focus { border-color: var(--accent); }
+.form-actions { display: flex; gap: 8px; }
+
+.empty { padding: 28px 4px; color: var(--muted); font-size: 14px; }
+.empty.boxed { border: 1px dashed var(--border); border-radius: 6px; padding: 18px 14px; font-size: 13px; }
+
+@media (max-width: 1180px) {
+  table.jobs, .jobs tbody { display: block; }
+  .jobs thead { display: none; }
+  .jobs tr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "company company score" "role role role" "date status status" "inbox inbox inbox" "pipe pipe pipe"; gap: 3px 12px; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  .jobs td.c-pipe { grid-area: pipe; border-left: 0; border-top: 2px solid var(--border); padding: 8px 0 0; margin-top: 6px; }
+  .jobs td.c-pipe.is-empty, .jobs td.c-inbox.is-empty { display: none; }
+  .jobs td.c-inbox { grid-area: inbox; margin-top: 2px; }
+  .pipe-tip { display: none; }
+  .jobs tbody tr:last-child { border-bottom: 0; }
+  .jobs tr.group-row { display: block; padding: 0; }
+  .jobs tr.group-row th { display: block; top: var(--strip-h, 0px); }   /* no column headings in the card layout */
+  .jobs td { display: block; padding: 0; border: 0; width: auto; min-width: 0; }
+  .jobs td + td { border-left: 0; }
+  .c-company { grid-area: company; } .c-role { grid-area: role; } .c-score { grid-area: score; justify-self: end; }
+  .c-date { grid-area: date; } .c-status { grid-area: status; } .c-resume { grid-area: resume; justify-self: end; }
+
+  .c-resume[data-l]::before { content: attr(data-l) " "; }
+}
+
+/* ---------- Outreach ---------- */
+.section { margin-bottom: 26px; }
+.section-head { display: flex; align-items: baseline; gap: 8px; margin: 0 0 8px; font-size: 13px; font-weight: 700; }
+.section-head .count { color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
+.msg { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 18px; padding: 14px; margin-bottom: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; max-width: 1120px; }
+.msg.review { border-left: 3px solid var(--accent); }
+/* Stage on an applied job: a pill that is also its own picker. */
+select.stage-pick { appearance: none; -webkit-appearance: none; border: 1px solid transparent; cursor: pointer; font: inherit; font-size: 12px;
+  padding: 2px 10px; border-radius: 999px; }
+select.stage-pick:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* A chevron after the text, so the pill reads as a control and not a label. The select hides its own. */
+.stage-wrap { position: relative; display: inline-block; }
+.stage-wrap select.stage-pick { padding-right: 24px; }
+.stage-wrap::after { content: ""; position: absolute; right: 9px; top: 50%; width: 6px; height: 6px; margin-top: -5px;
+  border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); transform: rotate(45deg); pointer-events: none; }
+.add-job-btn { display: inline-flex; align-items: center; gap: 4px; }
+.add-job { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin: 0 0 14px; max-width: 1120px;
+  display: flex; flex-direction: column; gap: 10px; }
+.add-job.in-row { flex: 1 1 100%; margin: 6px 0 0; max-width: none; background: var(--paper); }
+.check-line { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; }
+.check-line input { margin-top: 3px; }
+.add-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+/* Channel at a glance: email cards are red, LinkedIn notes blue. */
+.msg.ch-email { background: var(--email-bg); border-left: 4px solid var(--email); }
+.msg.ch-li { background: var(--li-bg); border-left: 4px solid var(--li); }
+.ch-tag { align-self: flex-start; font-size: 11px; font-weight: 700; letter-spacing: 0.02em; padding: 2px 8px; border-radius: 4px; color: #FFFFFF; }
+.ch-tag.email { background: var(--email); }
+.ch-tag.li { background: var(--li); }
+.msg .field textarea, .msg .field input { background: var(--surface); }
+.sig { white-space: pre-line; color: var(--muted); padding: 2px 10px 0; margin-top: -4px; line-height: 1.5; }
+.msg-main { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.msg-who { overflow-wrap: anywhere; }
+.msg-who strong { font-size: 14px; }
+.msg-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.redraft-row { display: flex; gap: 8px; }
+.redraft-row input { flex: 1 1 0; min-width: 0; }
+.audit { border-left: 1px solid var(--border); padding-left: 16px; min-width: 0; }
+.audit-score { display: flex; align-items: baseline; gap: 6px; }
+.audit-score b { font-size: 26px; line-height: 1; font-variant-numeric: tabular-nums; }
+.audit-label { font-size: 11px; font-weight: 600; color: var(--muted); margin: 10px 0 3px; }
+.audit-label:first-child { margin-top: 0; }
+.notes { margin: 0; padding-left: 16px; }
+.notes li { margin-bottom: 3px; }
+.notes.warn li::marker { color: var(--warn); }
+.row-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: 10px 12px; margin-bottom: 6px; max-width: 1120px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; }
+.row-line .grow { flex: 1 1 260px; min-width: 0; overflow-wrap: anywhere; }
+.row-line .when { font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
+.li-note textarea { min-height: 76px; }
+.compact { max-width: 1120px; }
+.inbox-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 0 0 14px; max-width: 1120px; }
+.inbox-bar.filter-bar { padding: 8px 12px; background: var(--accent-soft); border-radius: 6px; }
+.inbox-row { align-items: flex-start; }
+.inbox-row .pill { margin-top: 2px; }
+.inbox-acts { display: flex; gap: 6px; flex-wrap: wrap; }
+.quote { color: var(--muted); font-style: italic; margin-top: 2px; }
+.did { color: var(--ok); margin-top: 2px; font-weight: 600; font-size: 12px; }
+.fix-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; width: 100%; padding-top: 6px; }
+.fix-row select { max-width: 100%; }
+.inbox-list { display: flex; flex-direction: column; gap: 10px; max-width: 1120px; }
+/* One card per job: header (job, where it stands, the one action), then its emails newest first. */
+.inbox-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.ic-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 10px 12px; }
+.ic-title { flex: 1 1 240px; min-width: 0; overflow-wrap: anywhere; font-size: 14px; }
+.inbox-card > .err { margin: 0; padding: 0 12px 8px; }
+.ic-lines .row-line { margin: 0; max-width: none; border: 0; border-top: 1px solid var(--grid); border-radius: 0; background: transparent; }
+.inbox-card .ic-more { display: flex; justify-content: flex-start; width: 100%; padding: 8px 12px; border-top: 1px solid var(--grid); border-radius: 0; min-height: 36px; }
+.did a { color: inherit; text-decoration: underline; }
+.inbox-more { max-width: 1120px; }
+.inbox-more summary { cursor: pointer; color: var(--muted); padding: 6px 0; }
+.inbox-more summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.compact .row-line { padding: 7px 12px; margin-bottom: 0; border-radius: 0; border-top-width: 0; }
+.compact .row-line:first-child { border-top-width: 1px; border-radius: 6px 6px 0 0; }
+.compact .row-line:last-child { border-radius: 0 0 6px 6px; }
+.compact .row-line:only-child { border-radius: 6px; }
+
+@media (max-width: 760px) {
+  .msg { grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 12px; }
+  .audit { border-left: 0; border-top: 1px solid var(--border); padding: 12px 0 0; }
+  .btn-approve { flex: 1 1 100%; }
+}
+
+/* ---------- Monitor ---------- */
+.mon-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 26px 32px; max-width: 1100px; }
+.mon-grid > section { min-width: 0; }
+.mon-grid h2 { font-size: 13px; font-weight: 700; margin: 0 0 8px; }
+.mon-grid h3 { font-size: 11px; font-weight: 600; color: var(--muted); margin: 16px 0 4px; }
+dl.kv { display: grid; grid-template-columns: minmax(110px, auto) 1fr; gap: 6px 16px; margin: 0; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; }
+dl.kv dt { color: var(--muted); }
+dl.kv dd { margin: 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+dl.kv dd.big { font-size: 15px; font-weight: 700; }
+.switches { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.switch { justify-content: flex-start; gap: 10px; width: 100%; max-width: 280px; min-height: 40px; }
+.sw-track { width: 34px; height: 20px; border-radius: 999px; background: var(--border); position: relative; flex: 0 0 auto; transition: background-color 0.12s ease; }
+.sw-thumb { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--surface); box-shadow: 0 0 0 1px var(--muted); transition: transform 0.12s ease; }
+.switch[aria-checked="true"] .sw-track { background: var(--ok); }
+.switch[aria-checked="true"] .sw-thumb { transform: translateX(14px); box-shadow: none; }
+.confirm { margin-top: 8px; padding: 10px 12px; border: 1px solid var(--warn); background: var(--warn-bg); border-radius: 6px; max-width: 460px; }
+.confirm p { margin: 0 0 8px; }
+table.mini { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.mini th { text-align: left; font-size: 11px; font-weight: 600; color: var(--muted); padding: 4px 8px 4px 0; border-bottom: 1px solid var(--border); }
+.mini td { padding: 5px 8px 5px 0; border-bottom: 1px solid var(--border); vertical-align: top; overflow-wrap: anywhere; }
+.mini .r { text-align: right; padding-right: 0; padding-left: 8px; white-space: nowrap; }
+.mini tbody tr:last-child td { border-bottom: 0; }
+
+/* ---------- Dialog ---------- */
+dialog { background: var(--surface); color: var(--ink); border: 1px solid var(--border); border-radius: 10px; padding: 0; width: min(720px, calc(100vw - 24px)); max-height: calc(100vh - 32px); box-shadow: var(--shadow); }
+dialog::backdrop { background: var(--scrim); }
+dialog[open] { display: flex; flex-direction: column; }
+.dlg-head { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px 10px; border-bottom: 1px solid var(--border); }
+.dlg-head h2 { flex: 1; margin: 0; font-size: 14px; overflow-wrap: anywhere; }
+.dlg-body { overflow-y: auto; padding: 4px 16px 16px; }
+.person { padding: 12px 0; border-bottom: 1px solid var(--border); }
+.person:last-child { border-bottom: 0; }
+.person-name { font-weight: 700; font-size: 14px; }
+.person-why { margin: 3px 0 6px; }
+/* People waiting for approval: one column, no audit panel, grouped under their job. */
+.msg.person-card { grid-template-columns: minmax(0, 1fr); }
+.msg.person-card .why { margin: 6px 0 4px; }
+.small { font-size: 12px; }
+.warn-note { margin-top: 6px; padding: 5px 9px; border-radius: 4px; background: var(--warn-bg); color: var(--warn); font-weight: 600; }
+.person-group + .person-group { margin-top: 14px; }
+.group-head { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.person-meta { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; overflow-wrap: anywhere; }
+.person-msgs { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.person-msgs li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+
+@media (max-width: 600px) {
+  #strip { position: static; padding: 10px 12px; gap: 4px 16px; }
+  .strip-label { flex-basis: 100%; }
+  .strip-right { margin-left: 0; }
+  #tabs { padding: 0 6px; position: sticky; top: 0; z-index: 10; }
+  #view, #down { margin-left: 0; margin-right: 0; }
+  #down { margin: 10px 12px 0; }
+  #view { padding: 12px 12px 60px; }
+}
+/* Optional features that are off: their columns, tabs and sections are not shown at all. */
+body.no-outreach .c-pipe, body.no-outreach [data-feature="outreach"],
+body.no-email .c-inbox, body.no-email [data-feature="email"] { display: none !important; }
+.onboard { max-width: 560px; margin: 64px auto; padding: 0 16px; }
+.onboard h1 { font-size: 22px; margin: 0 0 12px; }
+.onboard code { font-size: 15px; padding: 2px 6px; border-radius: 4px; background: var(--paper); border: 1px solid var(--border); }
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+</style>
+</head>
+<body>
+<header id="strip" aria-label="Waiting on you"></header>
+<nav id="tabs" aria-label="Sections">
+  <a href="#jobs" data-tab="jobs">Jobs</a>
+  <a href="#outreach" data-tab="outreach" data-feature="outreach">Outreach</a>
+  <a href="#inbox" data-tab="inbox" data-feature="email">Inbox</a>
+  <a href="#monitor" data-tab="monitor">Monitor</a>
+</nav>
+<div id="down" role="status" hidden></div>
+<main id="view"></main>
+<dialog id="people-dlg" aria-labelledby="people-title">
+  <div class="dlg-head">
+    <h2 id="people-title"></h2>
+    <button type="button" class="btn-icon btn-quiet" id="people-close" aria-label="Close"></button>
+  </div>
+  <div class="dlg-body" id="people-body"></div>
+</dialog>
+
+<script>
+(function () {
+  'use strict';
+  var POLL_MS = 15000, RETRY_MS = 5000, LIVE_MS = 3000;
+  var TABS = ['jobs', 'outreach', 'inbox', 'monitor'];
+
+  var ICONS = {
+    external: '<path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
+    copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/>',
+    check: '<polyline points="20 6 9 17 4 12"/>',
+    x: '<line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>',
+    search: '<circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16" y2="16"/>',
+    plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+    play: '<polygon points="8 5 19 12 8 19 8 5" fill="currentColor"/>',
+    chevron: '<polyline points="6 9 12 15 18 9"/>',
+    globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/>',
+    linkedin: '<rect x="3" y="3" width="18" height="18" rx="3"/><line x1="8" y1="11" x2="8" y2="17"/><line x1="8" y1="7.5" x2="8" y2="7.6"/><path d="M12 17v-6"/><path d="M12 13.5a2.5 2.5 0 0 1 5 0V17"/>',
+    work: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><path d="M3 13h18"/>',
+    school: '<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5"/>',
+    pause: '<line x1="9" y1="5" x2="9" y2="19"/><line x1="15" y1="5" x2="15" y2="19"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>',
+    alert: '<circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16.5" x2="12" y2="16.6"/>'
+  };
+  function icon(name) {
+    var s = document.createElement('span');
+    s.className = 'icon'; s.setAttribute('aria-hidden', 'true');
+    s.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + ICONS[name] + '</svg>';
+    return s;
+  }
+
+  // ---------- state ----------
+  var S = {
+    tab: 'jobs', overview: null, queue: null, inbox: null, monitor: null, notif: null,
+    profile: null,  // /api/profile/status: onboarded, features, signature
+    fix: {},        // inbox id -> {open, kind, job_id}: your correction of a read
+    coPop: null,    // {id, kind, change, url}: the company-link popover open on a Jobs row
+    addMail: {},    // inbox id -> {open, f}: the "Add as a job" form under an email about an untracked company
+    inboxOpen: {},  // job id -> true when its Inbox card shows every email, not just the newest
+    inboxJob: null, // set by #inbox?job=<id>: the Inbox tab shows only that job
+    down: null, filter: 'all', q: '',
+    forms: {},      // job id -> {open, size, keep, url, needUrl}
+    edits: {},      // message id -> {subject, body}
+    redraft: {},    // message id -> {open, text}
+    busy: {}, errors: {}, copied: {},
+    autoConfirm: false, reqId: 0,
+    panel: null,    // {id, data, err}: the per-job review panel while it is open
+    lastIdx: {}     // job id -> pipeline stage index at the last render, so the circle can move ahead
+  };
+  try { var f = localStorage.getItem('jd-dash-filter'); if (f) S.filter = f; } catch (e) { /* storage unavailable */ }
+
+  // ---------- helpers ----------
+  function h(tag, attrs) {
+    var el = document.createElement(tag);
+    if (attrs) Object.keys(attrs).forEach(function (k) {
+      var v = attrs[k];
+      if (v === false || v === null || v === undefined) return;
+      if (k === 'class') el.className = v;
+      else if (k.indexOf('on') === 0) el.addEventListener(k.slice(2), v);
+      else if (v === true) el.setAttribute(k, '');
+      else el.setAttribute(k, v);
+    });
+    for (var i = 2; i < arguments.length; i++) add(el, arguments[i]);
+    return el;
+  }
+  function add(el, c) {
+    if (c === null || c === undefined || c === false) return;
+    if (Array.isArray(c)) { c.forEach(function (x) { add(el, x); }); return; }
+    el.appendChild(typeof c === 'object' ? c : document.createTextNode(String(c)));
+  }
+  function $(id) { return document.getElementById(id); }
+  function clear(el) { while (el.firstChild) el.removeChild(el.firstChild); }
+  function enc(s) { return encodeURIComponent(s); }
+  function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
+  function toList(v) {
+    if (Array.isArray(v)) return v.map(String);
+    if (v === null || v === undefined || v === '') return [];
+    if (typeof v === 'string') { try { var p = JSON.parse(v); if (Array.isArray(p)) return p.map(String); } catch (e) { /* plain string */ } return [v]; }
+    return [String(v)];
+  }
+  function pd(iso) { if (!iso) return null; var d = new Date(iso); return isNaN(d.getTime()) ? null : d; }
+  function fmtDT(iso) { var d = pd(iso); return d ? d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : ''; }
+  function fmtD(iso) { var d = pd(iso); return d ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''; }
+  function fmtNext(iso) {
+    var d = pd(iso); if (!d) return '';
+    var now = new Date();
+    if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    return fmtDT(iso);
+  }
+  function usd(n) { return n === null || n === undefined ? 'no data yet' : '$' + Number(n).toFixed(2); }
+  function pct(n) { return n === null || n === undefined ? 'no data yet' : Math.round(n * 100) + '%'; }
+  function or(v, d) { return v === null || v === undefined ? d : v; }
+
+  function api(method, url, body) {
+    var opt = { method: method, headers: {} };
+    if (body !== undefined) { opt.headers['Content-Type'] = 'application/json'; opt.body = JSON.stringify(body); }
+    return fetch(url, opt).then(function (r) {
+      return r.text().then(function (t) {
+        var d = null; try { d = t ? JSON.parse(t) : null; } catch (e) { /* not JSON */ }
+        return { ok: r.ok, status: r.status, data: d };
+      });
+    });
+  }
+  function errText(res) {
+    if (res.data && res.data.error) return String(res.data.error);
+    if (res.status === 404) return 'Not available on this server yet (404).';
+    return 'Request failed (' + res.status + ').';
+  }
+  function getJSON(url) {
+    return fetch(url).then(function (r) {
+      if (!r.ok) throw new Error('The server returned ' + r.status + ' for ' + url + '.');
+      return r.json();
+    });
+  }
+
+  // ---------- data loading ----------
+  var pollTimer = null;
+  function tabUrl(t) { return t === 'jobs' ? '/api/overview' : t === 'outreach' ? '/api/queue' : t === 'inbox' ? '/api/inbox' : null; }
+  function refresh() {
+    var id = ++S.reqId, t = S.tab, u = tabUrl(t);
+    var pid = S.panel && S.panel.id;
+    var reqs = [getJSON('/notifications'), getJSON('/api/monitor'), u ? getJSON(u) : Promise.resolve(null),
+      pid ? getJSON('/api/jobs/' + enc(pid) + '/outreach') : Promise.resolve(null), getJSON('/api/profile/status')];
+    return Promise.all(reqs).then(function (r) {
+      if (id !== S.reqId) return;
+      var sig = JSON.stringify(r) + '|' + t;
+      var same = sig === S.sig && !S.down;
+      S.sig = sig;
+      S.notif = r[0]; S.monitor = r[1]; S.profile = r[4];
+      if (t === 'jobs') S.overview = r[2];
+      if (t === 'outreach') S.queue = r[2];
+      if (t === 'inbox') S.inbox = r[2];
+      if (pid && S.panel && S.panel.id === pid) { S.panel.data = r[3]; S.panel.err = null; }
+      S.down = null;
+      if (!same) render();
+    }, function (e) {
+      if (id !== S.reqId) return;
+      S.sig = null;
+      S.down = (e && e.message && e.message.indexOf('The server returned') === 0) ? e.message : 'Cannot reach the server.';
+      render();
+    });
+  }
+  function schedule() {
+    clearTimeout(pollTimer);
+    pollTimer = setTimeout(function () {
+      if (document.visibilityState === 'visible') refresh().then(schedule, schedule); else schedule();
+    }, S.down ? RETRY_MS : (pipelineRunning() ? LIVE_MS : POLL_MS));
+  }
+  var RUNNING = { searching: 1, ranking: 1, drafting: 1 };
+  function pipelineRunning() {
+    var jobs = (S.overview && S.overview.jobs) || [];
+    if (jobs.some(function (j) { return RUNNING[(j.outreach || {}).state]; })) return true;
+    return !!(S.panel && S.panel.data && RUNNING[((S.panel.data.job || {}).outreach || {}).state]);
+  }
+  function refreshNow() { S.sig = null; return refresh().then(schedule, schedule); }
+
+  // ---------- optional features and onboarding ----------
+  function feat(k) { return !!(S.profile && S.profile.features && S.profile.features[k]); }
+  function tabOn(t) { return t === 'outreach' ? feat('outreach') : t === 'inbox' ? feat('email') : true; }
+  function applyFeatures() {
+    var b = document.body;
+    b.classList.toggle('no-outreach', !!S.profile && !feat('outreach'));
+    b.classList.toggle('no-email', !!S.profile && !feat('email'));
+    if (S.profile && !tabOn(S.tab)) { S.tab = 'jobs'; if (location.hash && location.hash !== '#jobs') history.replaceState(null, '', '#jobs'); }
+  }
+  function renderOnboard(view) {
+    view.appendChild(h('section', { class: 'onboard' },
+      h('h1', null, 'Set up your profile first'),
+      h('p', null, 'Run onboarding in Claude Code: open this folder in Claude Code and type ', h('code', null, '/onboard'), '.'),
+      h('p', { class: 'muted' }, 'It asks about your experience, writes your profile, base resumes and voice notes into profile/, ' +
+        'and turns on only the optional features you choose. This page fills in as soon as it is done.')));
+  }
+
+  // ---------- rendering with focus kept ----------
+  // Pinned header offsets, measured rather than assumed: the strip wraps on narrow screens and the column headings'
+  // height depends on the font. Re-measured on every render and on resize.
+  function syncSticky() {
+    var root = document.documentElement.style, strip = $('strip'), head = document.querySelector('table.jobs thead');
+    root.setProperty('--strip-h', (strip ? strip.getBoundingClientRect().height : 0) + 'px');
+    if (head) root.setProperty('--jobs-head-h', head.getBoundingClientRect().height + 'px');
+  }
+  window.addEventListener('resize', syncSticky);
+
+  function render() {
+    var ae = document.activeElement, fk = ae && ae.getAttribute && ae.getAttribute('data-fk');
+    var ss = null, se = null;
+    if (fk && ae.selectionStart !== undefined) { try { ss = ae.selectionStart; se = ae.selectionEnd; } catch (e) { /* not text */ } }
+    var sy = window.scrollY;
+    renderStrip(); renderTabs(); renderDown();
+    // Column headers pin just under the waiting strip, whatever height it wraps to.
+    syncSticky();
+    var view = $('view'); clear(view);
+    applyFeatures();
+    if (S.profile && S.profile.onboarded === false) { $('tabs').hidden = true; renderOnboard(view); return; }
+    $('tabs').hidden = false;
+    if (S.tab === 'jobs') { renderJobs(view); syncSticky(); }
+    else if (S.tab === 'outreach') renderOutreach(view);
+    else if (S.tab === 'inbox') renderInbox(view);
+    else renderMonitor(view);
+    if (S.panel && dlg.open) renderPanel($('people-body'));
+    if (fk) {
+      var n = document.querySelector('[data-fk="' + fk.replace(/"/g, '\\"') + '"]');
+      if (n && n !== ae) { n.focus({ preventScroll: true }); if (ss !== null) { try { n.setSelectionRange(ss, se); } catch (e) { /* ignore */ } } }
+    }
+    if (window.scrollY !== sy) window.scrollTo(0, sy);
+  }
+
+  function renderStrip() {
+    var el = $('strip'); clear(el);
+    var n = S.notif;
+    el.appendChild(h('span', { class: 'strip-label' }, 'Waiting on you'));
+    if (!n) { el.appendChild(h('span', { class: 'muted' }, S.down ? 'No data yet.' : 'Loading')); return; }
+    if (!n.total) {
+      el.appendChild(h('span', { class: 'strip-none' }, 'Nothing waiting on you.'));
+    } else {
+      var c = h('div', { class: 'strip-counts' });
+      function item(cls, num, one, many, href) {
+        if (!num) return;
+        c.appendChild(h('a', { href: href || '#outreach', class: 'wait-item ' + cls },
+          h('span', { class: 'wait-num' }, String(num)), h('span', { class: 'wait-text' }, num === 1 ? one : many)));
+      }
+      item('people', n.people, 'person to approve', 'people to approve');
+      item('approve', n.approve, 'email to approve', 'emails to approve');
+      item('linkedin', n.linkedin, 'LinkedIn note to send', 'LinkedIn notes to send');
+      item('inbox', n.inbox, 'email to confirm', 'emails to confirm', '#inbox');
+      item('failed', n.failed, 'failed send', 'failed sends');
+      el.appendChild(c);
+    }
+    var right = h('div', { class: 'strip-right' });
+    if (S.monitor && S.monitor.paused) right.appendChild(h('span', { class: 'paused-mark' }, icon('pause'), 'Sending paused'));
+    if (n.next_send_at) right.appendChild(h('span', { class: 'strip-next' }, icon('clock'), 'Next send ' + fmtNext(n.next_send_at)));
+    if (right.firstChild) el.appendChild(right);
+  }
+  function renderTabs() {
+    Array.prototype.forEach.call(document.querySelectorAll('#tabs a'), function (a) {
+      if (a.getAttribute('data-tab') === S.tab) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+    });
+  }
+  function renderDown() {
+    var d = $('down'); clear(d);
+    if (!S.down) { d.hidden = true; return; }
+    d.hidden = false;
+    d.appendChild(icon('alert'));
+    d.appendChild(h('span', null, S.down + ' Retrying every ' + (RETRY_MS / 1000) + ' seconds.'));
+  }
+
+  // ---------- Jobs tab ----------
+  var STATUS = {
+    captured: ['Captured', 'neutral'], evaluating: ['Evaluating', 'accent'], scored: ['Ready to approve', 'accent'],
+    awaiting: ['Ready to approve', 'accent'], questions: ['Has questions', 'warn'], queued: ['Queued', 'accent'],
+    building: ['Building', 'accent'], built: ['Built', 'ok'], built_external: ['Built elsewhere', 'ok'],
+    applied: ['Applied', 'ok'], skipped: ['Skipped', 'neutral'], error: ['Error', 'danger'], needs_login: ['Needs login', 'danger']
+  };
+  // After Applied: where a job stands. Same stages as the side panel and the server.
+  var JOB_STAGES = [['applied', 'Applied', 'ok'], ['heard_back', 'Heard back', 'accent'], ['assessment', 'Assessment', 'accent'],
+    ['interviewing', 'Interviewing', 'accent'], ['offer', 'Offer', 'ok'], ['paused', 'On hold', 'warn'], ['rejected', 'Rejected', 'danger'],
+    ['withdrawn', 'Withdrawn', 'neutral']];
+  // 'paused': the company put the search on hold. Open, so it holds outreach like the rest.
+  var OPEN_STAGES = ['heard_back', 'assessment', 'interviewing', 'offer', 'paused'];
+  var CLOSED_STAGES = ['rejected', 'withdrawn'];
+  function jobStageOf(j) { return JOB_STAGES.filter(function (s) { return s[0] === (j.stage || 'applied'); })[0] || JOB_STAGES[0]; }
+  // The server refuses outreach at these stages (job_closed), so the start button must not be offered:
+  // "On hold: interviewing" while you are in their process, "Closed: rejected" once it has ended.
+  function outreachHold(j) {
+    if (j.status !== 'applied') return null;
+    var s = jobStageOf(j), label = s[1].toLowerCase();
+    if (s[0] === 'paused') return 'On hold: search paused';
+    if (OPEN_STAGES.indexOf(s[0]) !== -1) return 'On hold: ' + label;
+    if (CLOSED_STAGES.indexOf(s[0]) !== -1) return 'Closed: ' + label;
+    return null;
+  }
+  // The interview handoff note the server keeps in the job's folder (read only). Link opens it as text; Copy puts it on the
+  // clipboard for claude.ai. Nothing here writes: the server regenerates it as mail arrives.
+  function handoffLinks(j) {
+    var ho = j.handoff;
+    if (!ho) return null;
+    var key = 'handoff-' + j.id, url = '/api/jobs/' + enc(j.id) + '/handoff', co = j.company || 'this job';
+    return h('span', { class: 'handoff-links' },
+      h('a', { href: url, target: '_blank', rel: 'noopener noreferrer', title: 'Interview prep note for ' + co + (ho.at ? ', updated ' + fmtDT(ho.at) : ''),
+        'aria-label': 'Handoff note for ' + co + ', opens in a new tab' }, 'Handoff note'),
+      h('button', { type: 'button', class: 'icon-only' + (S.copied[key] ? ' is-done' : ''), 'data-fk': 'copy-' + key, disabled: !!S.busy[key],
+        'aria-label': S.copied[key] ? 'Copied the handoff note for ' + co : 'Copy the handoff note for ' + co,
+        title: S.copied[key] ? 'Copied' : 'Copy for claude.ai',
+        onclick: function () {
+          S.busy[key] = true; delete S.errors[key]; render();
+          fetch(url, { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error('No note'); return r.text(); })
+            .then(function (t) { S.busy[key] = false; copyText(t, key); },
+              function () { S.busy[key] = false; S.errors[key] = 'Could not read the note'; render(); });
+        } }, icon(S.copied[key] ? 'check' : 'copy')),
+      S.errors[key] ? h('span', { class: 'err' }, S.errors[key]) : null);
+  }
+  // An applied job's status is where it stands, and changes right there.
+  function stageCell(j) {
+    var s = jobStageOf(j), key = 'stage-' + j.id;
+    var sel = h('select', { class: 'stage-pick pill ' + s[2], 'aria-label': 'Where the ' + (j.company || '') + ' application stands',
+      title: j.stage_note ? j.stage_note + (j.stage_at ? ' (' + fmtD(j.stage_at) + ')' : '') : '', disabled: !!S.busy[key], 'data-fk': key,
+      onchange: function (e) { post(key, '/jobs/' + enc(j.id) + '/stage', { stage: e.target.value, note: '' }); } },
+      JOB_STAGES.map(function (o) { return h('option', { value: o[0], selected: o[0] === s[0] ? '' : null }, o[1]); }));
+    return h('td', { class: 'c-status' }, h('span', { class: 'stage-wrap' }, sel), S.errors[key] ? h('div', { class: 'err' }, S.errors[key]) : null);
+  }
+
+  var FILTERS = [
+    ['all', 'All', function () { return true; }],
+    ['applied', 'Applied', function (j) { return j.status === 'applied'; }],
+    ['process', 'In process', function (j) { return j.status === 'applied' && OPEN_STAGES.indexOf(j.stage) !== -1; }],
+    ['closed', 'Closed', function (j) { return j.status === 'applied' && CLOSED_STAGES.indexOf(j.stage) !== -1; }],
+    ['skipped', 'Skipped', function (j) { return j.status === 'skipped'; }],
+    ['built', 'Built', function (j) { return j.status === 'built'; }],
+    ['built_external', 'Built elsewhere', function (j) { return j.status === 'built_external'; }],
+    ['evaluated', 'Evaluated', function (j) { return j.status === 'scored' || j.status === 'awaiting' || j.status === 'questions'; }],
+    ['captured', 'Captured', function (j) { return j.status === 'captured'; }],
+    ['outreach', 'Outreach', function (j) { return feat('outreach') && j.outreach && j.outreach.state !== 'none'; }]
+  ];
+  function form(id) { return S.forms[id] || (S.forms[id] = { open: false, size: '15', keep: '5', url: '', needUrl: false }); }
+
+  // A job applied to outside the tool: a referral, a careers site. No evaluation runs.
+  // Also the inline form under an email about a company you are not tracking: o.f is that email's own
+  // state, o.url posts to its route, o.reread offers the "read this company's mail again" box, o.noJd drops the paste box.
+  function newAddForm(over) {
+    var f = Object.assign({ company: '', title: '', url: '', company_url: '', applied_at: '', stage: 'applied', note: '', jd: '', reread: false }, over || {});
+    if (!f.applied_at) f.applied_at = new Date().toISOString().slice(0, 10);
+    return f;
+  }
+  function addJobForm(o) {
+    o = o || {};
+    var f = o.f || S.addForm || (S.addForm = newAddForm()), pre = o.pre || 'add-', bkey = o.key || 'add-job';
+    function field(label, key, attrs, tag) {
+      var el = h(tag || 'input', Object.assign({ 'data-fk': pre + key, oninput: function (e) { f[key] = e.target.value; } }, attrs || {}),
+        tag === 'textarea' ? f[key] : null);
+      if (tag !== 'textarea' && tag !== 'select') el.value = f[key];
+      return h('label', { class: 'field' }, h('span', null, label), el);
+    }
+    var stageSel = h('select', { 'data-fk': pre + 'stage', onchange: function (e) { f.stage = e.target.value; } },
+      JOB_STAGES.map(function (o2) { return h('option', { value: o2[0], selected: o2[0] === f.stage ? '' : null }, o2[1]); }));
+    var busy = !!S.busy[bkey];
+    return h('form', { class: 'add-job' + (o.url ? ' in-row full' : ''), onsubmit: function (e) {
+        e.preventDefault();
+        var body = Object.assign({}, f, { stage: f.stage === 'applied' ? null : f.stage });
+        if (!o.reread) delete body.reread;
+        if (o.noJd) delete body.jd;
+        post(bkey, o.url || '/jobs/manual', body, function () { if (o.done) o.done(); else { S.addOpen = false; S.addForm = null; } });
+      } },
+      h('div', { class: 'add-grid' },
+        field('Company', 'company', { type: 'text', required: '' }),
+        field('Role', 'title', { type: 'text', required: '' }),
+        field('Link to the posting', 'url', { type: 'url', placeholder: 'Careers page if you have it' }),
+        field('Company LinkedIn page', 'company_url', { type: 'text', inputmode: 'url', placeholder: 'Optional' }),
+        field('Applied on', 'applied_at', { type: 'date' }),
+        h('label', { class: 'field' }, h('span', null, 'Stage'), stageSel),
+        field('Note', 'note', { type: 'text' })),
+      o.noJd ? null : field('Job description (optional, lets outreach use it later)', 'jd', { rows: '4' }, 'textarea'),
+      o.reread ? h('label', { class: 'check-line' },
+        h('input', { type: 'checkbox', checked: f.reread ? '' : null, 'data-fk': pre + 'reread', onchange: function (e) { f.reread = e.target.checked; } }),
+        h('span', null, 'Read this company\u2019s earlier mail again ', h('span', { class: 'muted' }, '(up to 60 days; each email goes to Claude)'))) : null,
+      h('div', { class: 'msg-actions' },
+        h('button', { type: 'submit', class: 'btn-primary', disabled: busy, 'data-fk': pre + 'submit' }, busy ? 'Adding' : 'Add the job'),
+        h('button', { type: 'button', onclick: function () { if (o.cancel) o.cancel(); else { S.addOpen = false; render(); } } }, 'Cancel')),
+      S.errors[bkey] ? h('div', { class: 'err' }, S.errors[bkey]) : null);
+  }
+
+  function renderJobs(root) {
+    var o = S.overview;
+    if (!o) { root.appendChild(h('div', { class: 'empty' }, S.down ? 'Jobs are not loaded yet.' : 'Loading jobs')); return; }
+    var jobs = o.jobs || [];
+    var chips = h('div', { class: 'chips', role: 'group', 'aria-label': 'Filter jobs' });
+    FILTERS.forEach(function (f) {
+      if (f[0] === 'outreach' && !feat('outreach')) return;
+      var n = jobs.filter(f[2]).length;
+      chips.appendChild(h('button', { type: 'button', class: 'chip-btn', 'aria-pressed': String(S.filter === f[0]), 'data-fk': 'chip-' + f[0],
+        onclick: function () { S.filter = f[0]; try { localStorage.setItem('jd-dash-filter', f[0]); } catch (e) { /* ignore */ } render(); } },
+        f[1] + ' ', h('b', null, String(n))));
+    });
+    var input = h('input', { type: 'search', placeholder: 'Search company, role, location', 'aria-label': 'Search company, role, location',
+      value: S.q, autocomplete: 'off', spellcheck: 'false', 'data-fk': 'search',
+      oninput: function (e) { S.q = e.target.value; render(); } });
+    input.value = S.q;
+    var addBtn = h('button', { type: 'button', class: 'btn-sm add-job-btn', 'aria-expanded': String(!!S.addOpen), 'data-fk': 'add-job',
+      onclick: function () { S.addOpen = !S.addOpen; render(); } }, icon('plus'), 'Add a job');
+    root.appendChild(h('div', { class: 'toolbar' }, chips, addBtn, h('label', { class: 'search' }, icon('search'), input)));
+    if (S.addOpen) root.appendChild(addJobForm());
+
+    var fdef = FILTERS.filter(function (f) { return f[0] === S.filter; })[0] || FILTERS[0];
+    var q = S.q.trim().toLowerCase();
+    var list = jobs.filter(fdef[2]).filter(function (j) {
+      return !q || [j.company, j.title, j.location].join(' ').toLowerCase().indexOf(q) !== -1;
+    });
+    if (!jobs.length) { root.appendChild(h('div', { class: 'empty boxed' }, 'No jobs captured yet.')); return; }
+    if (!list.length) { root.appendChild(h('div', { class: 'empty boxed' }, q ? 'No jobs match "' + S.q.trim() + '".' : 'No jobs in this filter.')); return; }
+
+    var thr = o.settings && typeof o.settings.threshold === 'number' ? o.settings.threshold : null;
+    var table = h('table', { class: 'jobs' },
+      h('thead', null, h('tr', null, COLS.map(function (c) { return h('th', { scope: 'col', class: c[1] }, c[0]); }))));
+    // Grouped by where each job stands, in this order; a group with nothing in it is not shown.
+    // Within a group the order is unchanged. Every filter and search is grouped the same way.
+    JOB_GROUPS.forEach(function (g) {
+      var rows = list.filter(function (j) { return jobGroupOf(j) === g[0]; });
+      if (!rows.length) return;
+      var tb = h('tbody', { class: 'job-group', 'data-group': g[0] },
+        h('tr', { class: 'group-row' }, h('th', { scope: 'colgroup', colspan: String(COLS.length) },
+          g[1], h('span', { class: 'group-n' }, String(rows.length)))));
+      rows.forEach(function (j) { tb.appendChild(jobRow(j, thr)); });
+      table.appendChild(tb);
+    });
+    root.appendChild(table);
+  }
+
+  // The Jobs groups, top to bottom. "Active": they have answered (heard back, assessment, interviewing, offer, on
+  // hold). "Outreach": the Outreach filter's own test, so the two always agree. Rejected includes withdrawn.
+  var JOB_GROUPS = [['active', 'Active'], ['outreach', 'Applied, outreach running'], ['applied', 'Applied, no outreach'],
+    ['pending', 'Not applied yet'], ['closed', 'Rejected'], ['skipped', 'Skipped']];
+  function jobGroupOf(j) {
+    if (j.status === 'skipped') return 'skipped';
+    if (j.status !== 'applied') return 'pending';
+    if (CLOSED_STAGES.indexOf(j.stage) !== -1) return 'closed';
+    if (OPEN_STAGES.indexOf(j.stage) !== -1) return 'active';
+    return j.outreach && j.outreach.state && j.outreach.state !== 'none' ? 'outreach' : 'applied';
+  }
+
+  var COLS = [['Date', 'c-date'], ['Company', 'c-company'], ['Role', 'c-role'], ['Score', 'c-score'], ['Status', 'c-status'],
+    ['Inbox', 'c-inbox'], ['Outreach', 'c-pipe']];
+
+  // Website and LinkedIn in front of the name. Both are buttons in every state: a greyed one opens a
+  // small popover to paste the link, a lit one shows the link with Open and Change. One popover at a time (S.coPop).
+  var CO_KINDS = { site: { icon: 'globe', label: 'Company website', route: '/company_website', ph: 'company.com', field: 'company_website' },
+    li: { icon: 'linkedin', label: 'Company LinkedIn page', route: '/company_url', ph: 'linkedin.com/company/name', field: 'company_url' } };
+  function coPopover(j, kind) {
+    var c = CO_KINDS[kind], pop = S.coPop, key = 'co-' + kind + '-' + j.id, cur = j[c.field] || '', busy = !!S.busy[key];
+    function close() { S.coPop = null; delete S.errors[key]; render(); }
+    var box = h('div', { class: 'sp-pop co-pop', role: 'dialog', 'aria-label': c.label + ' for ' + (j.company || 'this company'),
+      onkeydown: function (e) { if (e.key === 'Escape') { e.stopPropagation(); close(); var b = document.querySelector('[data-fk="co-btn-' + kind + '-' + j.id + '"]'); if (b) b.focus(); } } });
+    if (cur && !pop.change) {
+      box.appendChild(h('div', { class: 'field' }, h('span', null, c.label), h('a', { class: 'co-cur', href: cur, target: '_blank', rel: 'noopener noreferrer' }, cur)));
+      box.appendChild(h('div', { class: 'msg-actions' },
+        h('a', { class: 'btn btn-sm', href: cur, target: '_blank', rel: 'noopener noreferrer', 'data-fk': 'co-open-' + kind + '-' + j.id }, 'Open'),
+        h('button', { type: 'button', class: 'btn-sm', 'data-fk': 'co-change-' + kind + '-' + j.id,
+          onclick: function () { pop.change = true; pop.url = cur; render(); focusCo(kind, j.id); } }, 'Change'),
+        h('button', { type: 'button', class: 'btn-sm btn-quiet', onclick: close }, 'Close')));
+      return box;
+    }
+    box.appendChild(h('form', { class: 'co-form', onsubmit: function (e) {
+        e.preventDefault();
+        var url = (pop.url || '').trim();
+        if (!url) { S.errors[key] = 'Paste the link first.'; render(); focusCo(kind, j.id); return; }
+        post(key, '/jobs/' + enc(j.id) + c.route, { url: url }, function () { S.coPop = null; });
+      } },
+      h('label', { class: 'field' }, h('span', null, c.label),
+        h('input', { type: 'text', inputmode: 'url', placeholder: c.ph, value: pop.url || '', autocomplete: 'off', 'data-fk': 'co-url-' + kind + '-' + j.id,
+          oninput: function (e) { pop.url = e.target.value; } })),
+      h('div', { class: 'msg-actions' },
+        h('button', { type: 'submit', class: 'btn-primary btn-sm', disabled: busy, 'data-fk': 'co-save-' + kind + '-' + j.id }, busy ? 'Saving' : 'Save'),
+        h('button', { type: 'button', class: 'btn-sm', onclick: close }, 'Cancel')),
+      S.errors[key] ? h('div', { class: 'err' }, S.errors[key]) : null));
+    return box;
+  }
+  function focusCo(kind, id) {
+    var n = document.querySelector('[data-fk="co-url-' + kind + '-' + id + '"], [data-fk="co-open-' + kind + '-' + id + '"]');
+    if (n) n.focus();
+  }
+  function companyCell(j) {
+    function btn(kind) {
+      var c = CO_KINDS[kind], url = j[c.field], on = !!url, open = !!(S.coPop && S.coPop.id === j.id && S.coPop.kind === kind);
+      var label = c.label + ' for ' + (j.company || 'the company') + (on ? '' : ': not set. Add it');
+      return h('button', { type: 'button', class: 'co-link' + (on ? '' : ' is-off'), title: on ? c.label : c.label + ' not found yet. Add it', 'aria-label': label,
+        'aria-expanded': String(open), 'aria-haspopup': 'dialog', 'data-fk': 'co-btn-' + kind + '-' + j.id,
+        onclick: function () {
+          S.coPop = open ? null : { id: j.id, kind: kind, change: false, url: on ? url : '' };
+          render(); if (!open) focusCo(kind, j.id);
+        } }, icon(c.icon));
+    }
+    var pop = S.coPop && S.coPop.id === j.id ? coPopover(j, S.coPop.kind) : null;
+    var nameHref = j.company_website || j.company_url;
+    return h('td', { class: 'c-company' }, h('div', { class: 'co' },
+      h('span', { class: 'co-links' }, btn('site'), btn('li')),
+      nameHref ? h('a', { class: 'co-name', href: nameHref, target: '_blank', rel: 'noopener noreferrer' }, j.company || '') : h('span', { class: 'co-name' }, j.company || ''),
+      pop));
+  }
+
+  // What the company has said, from the inbox watch: the newest email's kind and day, linking to the Inbox tab
+  // filtered to this job. Empty when nothing has come in.
+  function inboxCell(j) {
+    var ib = j.inbox || {};
+    if (!ib.count) return h('td', { class: 'c-inbox is-empty' });
+    var k = kindOf(ib.last_kind), day = fmtD(ib.last_at);
+    var title = plural(ib.count, 'email', 'emails') + (ib.needs ? ', ' + ib.needs + ' to confirm' : '');
+    return h('td', { class: 'c-inbox' },
+      h('a', { class: 'inbox-link', href: '#inbox?job=' + enc(j.id), title: title,
+        'aria-label': title + ' about ' + (j.company || 'this job') + '. Latest: ' + k[1].toLowerCase() + (day ? ', ' + day : '') + '. Open in the Inbox' },
+        ib.needs ? h('span', { class: 'needs-dot', 'aria-hidden': 'true' }) : null,
+        h('span', { class: 'pill ' + k[2] }, k[1]), day ? h('span', { class: 'when' }, day) : null));
+  }
+
+  function jobRow(j, thr) {
+    var st = STATUS[j.status] || [j.status || 'Unknown', 'neutral'];
+    var role = h('td', { class: 'c-role' }, j.url ? h('a', { href: j.url, target: '_blank', rel: 'noopener noreferrer' }, j.title || 'Untitled role') : (j.title || 'Untitled role'));
+    if (j.location) role.appendChild(h('div', { class: 'muted' }, j.location));
+    // The interview prep note belongs to the role, under its title and place, not under the stage picker.
+    var ho = handoffLinks(j);
+    if (ho) role.appendChild(ho);
+    if (j.status === 'built_external' && j.external_folder) role.appendChild(h('span', { class: 'ext-folder mono', title: j.external_folder }, j.external_folder));
+    var score = j.fit_score === null || j.fit_score === undefined
+      ? h('td', { class: 'c-score tone-muted' }, '')
+      : h('td', { class: 'c-score ' + (thr !== null && j.fit_score >= thr ? 'tone-ok' : 'tone-muted') }, String(j.fit_score));
+    return h('tr', null,
+      h('td', { class: 'c-date' }, fmtD(j.captured_at)),
+      companyCell(j),
+      role, score,
+      j.status === 'applied' ? stageCell(j) : h('td', { class: 'c-status' }, h('span', { class: 'pill ' + st[1] }, st[0])),
+      inboxCell(j),
+      (function () { var c = pipelineCell(j); return h('td', { class: 'c-pipe' + (c.firstChild ? '' : ' is-empty') }, c); })());
+  }
+
+  // ---------- Outreach pipeline, per job ----------
+  // Five stages. The circle sits on the current one, coloured by what the stage needs:
+  // work (running), you (waiting on you), sched (queued to send), done, fail, idle.
+  var STAGES = ['Applied', 'Find people', 'Approve people', 'Review drafts', 'Sent'];
+  var WORKING = { searching: 'Searching for people', ranking: 'Choosing who to message', drafting: 'Drafting messages' };
+  function stageOf(j) {
+    var o = j.outreach || {}, st = o.state || 'none';
+    if (st === 'none') return null;
+    if (st === 'searching' || st === 'ranking') return { idx: 1, tone: 'work', label: WORKING[st] };
+    if (st === 'people_review') return withLine({ idx: 2, tone: 'you', key: 'ppl', label: plural(or(o.people_to_approve, 0), 'person to approve', 'people to approve') }, o);
+    if (st === 'drafting') return { idx: 3, tone: 'work', label: WORKING.drafting };
+    if (st === 'failed') return { idx: or(o.found, 0) ? 3 : 1, tone: 'fail', label: or(o.found, 0) ? 'Drafting failed' : 'Search failed' };
+    var rev = or(o.to_approve, 0) + or(o.to_send_dm, 0);
+    if (rev) return withLine({ idx: 3, tone: 'you', key: 'rev', label: plural(rev, 'draft to review', 'drafts to review') }, o);
+    if (o.failed) return withLine({ idx: 4, tone: 'fail', key: 'fail', label: plural(o.failed, 'send failed', 'sends failed') }, o);
+    if (o.queued) return withLine({ idx: 4, tone: 'sched', key: 'sched', label: o.queued + ' scheduled' }, o);
+    var sent = or(o.emailed, 0) + or(o.dm_sent, 0);
+    if (sent) return { idx: 4, tone: 'done', label: sent + ' sent', complete: true };
+    return { idx: 4, tone: 'idle', label: o.error || 'Nothing to send', complete: true };
+  }
+  // The label under the track names what matters most; one more fact follows it on the row so a touch screen
+  // (no hover) still sees it. Order: what waits on you, then failed, scheduled, sent. Never more than two.
+  function withLine(s, o) {
+    var facts = [['ppl', or(o.people_to_approve, 0), 'person to approve', 'people to approve'],
+      ['rev', or(o.to_approve, 0) + or(o.to_send_dm, 0), 'draft to review', 'drafts to review'],
+      ['fail', or(o.failed, 0), 'send failed', 'sends failed'],
+      ['sched', or(o.queued, 0), 'scheduled', 'scheduled'],
+      ['sent', or(o.emailed, 0) + or(o.dm_sent, 0), 'sent', 'sent']];
+    var more = facts.filter(function (f) { return f[0] !== s.key && f[1] > 0; })[0];
+    if (more) s.line = s.label + ' \u00b7 ' + plural(more[1], more[2], more[3]);
+    return s;
+  }
+  function pipeFacts(j) {
+    var o = j.outreach || {}, lines = [], e = [], l = [];
+    if (o.found) lines.push(o.found + ' found' + (o.people_approved ? ', ' + o.people_approved + ' approved' : '') + (o.people_skipped ? ', ' + o.people_skipped + ' skipped' : ''));
+    if (o.people_to_approve) lines.push(plural(o.people_to_approve, 'person', 'people') + ' waiting for your approval');
+    if (o.to_approve) e.push(o.to_approve + ' to approve');
+    if (o.queued) e.push(o.queued + ' scheduled');
+    if (o.emailed) e.push(o.emailed + ' sent');
+    if (o.failed) e.push(o.failed + ' failed');
+    if (e.length) lines.push('Emails: ' + e.join(', '));
+    if (o.to_send_dm) l.push(o.to_send_dm + ' to send');
+    if (o.dm_sent) l.push(o.dm_sent + ' sent');
+    if (l.length) lines.push('LinkedIn: ' + l.join(', '));
+    if (o.state === 'failed' && o.error) lines.push(o.error);
+    return lines;
+  }
+  function stepper(j, s, big) {
+    var pos = function (i) { return (i / (STAGES.length - 1) * 100) + '%'; };
+    var track = h('div', { class: 'pipe-track' + (big ? ' big' : ''), 'aria-hidden': 'true' },
+      h('span', { class: 'pipe-line' }),
+      h('span', { class: 'pipe-fill', style: 'width:' + (s.complete ? '100%' : pos(s.idx)) }));
+    STAGES.forEach(function (name, i) {
+      if (i === s.idx) return;   // the cursor is the current stage's dot
+      track.appendChild(h('span', { class: 'pipe-dot ' + (s.complete || i < s.idx ? 'done' : 'todo'), style: 'left:' + pos(i) }));
+    });
+    // The circle that moves ahead: when a job reaches a later stage, it starts where it was and
+    // slides to the new stage once (state indication; a few times per job, so motion is earned).
+    var from = S.lastIdx[j.id];
+    var moving = !big && from !== undefined && from < s.idx;
+    var cur = h('span', { class: 'pipe-cursor t-' + s.tone + (s.tone === 'work' ? ' working' : ''), style: 'left:' + pos(moving ? from : s.idx) });
+    track.appendChild(cur);
+    if (moving) requestAnimationFrame(function () { requestAnimationFrame(function () { cur.style.left = pos(s.idx); }); });
+    if (!big) S.lastIdx[j.id] = s.idx;
+    return track;
+  }
+  function pipelineCell(j) {
+    var o = j.outreach || { state: 'none' }, key = 'job:' + j.id, f = form(j.id), box = h('div', { class: 'pipe-cell' });
+    var s = stageOf(j);
+    var hold = outreachHold(j);
+    if (!s) {
+      if (j.status !== 'applied') return box;   // the drafts say you applied, so outreach waits until you have
+      if (hold) { box.appendChild(h('div', { class: 'pipe-hold muted' }, hold)); return box; }
+      if (!f.open) {
+        box.appendChild(h('button', { type: 'button', class: 'play-btn', 'data-fk': 'play-' + j.id,
+          onclick: function () { f.open = true; render(); } },
+          h('span', { class: 'play-circle' }, icon('play')), h('span', null, 'Add to outreach')));
+        if (S.errors[key]) box.appendChild(h('div', { class: 'err' }, S.errors[key]));
+        return box;
+      }
+      box.appendChild(startPill(j, f));
+      return box;
+    }
+    var facts = pipeFacts(j);
+    box.appendChild(h('button', { type: 'button', class: 'pipe-btn tone-' + s.tone, 'data-fk': 'pipe-' + j.id,
+      'aria-label': [s.label].concat(facts).join('. '), onclick: function () { openJobPanel(j); } },
+      stepper(j, s, false),
+      h('span', { class: 'pipe-label' }, s.line || s.label)));
+    if (facts.length) box.appendChild(h('div', { class: 'pipe-tip', role: 'tooltip' }, facts.map(function (l) { return h('div', null, l); })));
+    if (o.state === 'failed') box.appendChild(hold ? h('div', { class: 'pipe-hold muted' }, hold) : retryButton(j));
+    if (S.errors[key]) box.appendChild(h('div', { class: 'err' }, S.errors[key]));
+    return box;
+  }
+  // A failed search is searched again (one more paid search, your click). A failed draft is
+  // drafted again for the people you already approved, with no new search.
+  function retryButton(j) {
+    var o = j.outreach || {}, key = 'job:' + j.id;
+    var hold = outreachHold(j);
+    if (hold) return h('span', { class: 'muted' }, hold);
+    if (or(o.found, 0)) {
+      return h('button', { type: 'button', class: 'btn-sm mt6', disabled: !!S.busy[key], 'data-fk': 'resume-' + j.id,
+        onclick: function () { post(key, '/api/jobs/' + enc(j.id) + '/outreach/resume', {}); } }, S.busy[key] ? 'Starting' : 'Retry drafting');
+    }
+    return h('button', { type: 'button', class: 'btn-sm mt6', disabled: !!S.busy[key], 'data-fk': 'retry-' + j.id,
+      onclick: function () { startOutreach(j, or(o.search_size, 15), or(o.keep, 5), null); } }, S.busy[key] ? 'Starting' : 'Search again');
+  }
+  // Begin starts with the defaults; the numbers are one tap away and float over the table, so the
+  // row never grows. The company link is found on the server; it is asked for only as a fallback.
+  function startPill(j, f) {
+    var key = 'job:' + j.id, busy = !!S.busy[key], needUrl = !!f.needUrl;
+    var pill = h('div', { class: 'start-pill' + (busy ? ' is-busy' : ''), role: 'group', 'aria-label': 'Start outreach for ' + (j.company || 'this job') },
+      h('button', { type: 'button', class: 'sp-begin', disabled: busy, 'data-fk': 'begin-' + j.id, onclick: function () { submitForm(j, f); } },
+        h('span', { class: 'play-circle' }, icon('play')), busy ? 'Starting' : 'Begin'),
+      h('button', { type: 'button', class: 'sp-opts', disabled: busy, 'aria-expanded': String(!!(f.optsOpen || needUrl)), 'data-fk': 'opts-' + j.id,
+        'aria-label': 'Search ' + f.size + ' people, keep ' + f.keep + '. Change', onclick: function () { f.optsOpen = !f.optsOpen; render(); } },
+        h('span', { class: 'num' }, f.size + ' \u00b7 ' + f.keep), icon('chevron')),
+      h('button', { type: 'button', class: 'sp-cancel', disabled: busy, 'aria-label': 'Cancel', title: 'Cancel', 'data-fk': 'cancel-' + j.id,
+        onclick: function () { f.open = false; f.optsOpen = false; f.needUrl = false; delete S.errors[key]; render(); } }, icon('x')));
+    var wrap = h('div', { class: 'sp-wrap' }, pill);
+    if (f.optsOpen || needUrl) {
+      var pop = h('div', { class: 'sp-pop', onkeydown: function (e) { if (e.key === 'Escape') { f.optsOpen = false; render(); } } });
+      if (needUrl) {
+        pop.appendChild(h('label', { class: 'field' }, h('span', null, 'Company LinkedIn link'),
+          h('input', { type: 'url', placeholder: 'linkedin.com/company/name', value: f.url, 'data-fk': 'url-' + j.id, autocomplete: 'off',
+            oninput: function (e) { f.url = e.target.value; } })));
+      }
+      pop.appendChild(h('div', { class: 'field-row' },
+        h('label', { class: 'field' }, h('span', null, 'Search'),
+          h('input', { type: 'number', min: '5', max: '50', value: f.size, 'data-fk': 'size-' + j.id, oninput: function (e) { f.size = e.target.value; } })),
+        h('label', { class: 'field' }, h('span', null, 'Keep'),
+          h('input', { type: 'number', min: '1', max: '10', value: f.keep, 'data-fk': 'keep-' + j.id, oninput: function (e) { f.keep = e.target.value; } }))));
+      wrap.appendChild(pop);
+    }
+    if (S.errors[key]) wrap.appendChild(h('div', { class: 'err' }, S.errors[key]));
+    return wrap;
+  }
+
+  function submitForm(j, f) {
+    var key = 'job:' + j.id, size = parseInt(f.size, 10), keep = parseInt(f.keep, 10);
+    if (!(size >= 5 && size <= 50)) { S.errors[key] = 'People to search must be 5 to 50.'; render(); return; }
+    if (!(keep >= 1 && keep <= 10)) { S.errors[key] = 'Keep must be 1 to 10.'; render(); return; }
+    var needUrl = !!f.needUrl, url = (f.url || '').trim();
+    if (needUrl && !url) { S.errors[key] = 'Paste the company LinkedIn link.'; render(); return; }
+    startOutreach(j, size, keep, needUrl ? url : null);
+  }
+
+  function startOutreach(j, size, keep, url) {
+    var key = 'job:' + j.id, f = form(j.id);
+    S.busy[key] = true; delete S.errors[key]; render();
+    var first = url ? api('POST', '/jobs/' + enc(j.id) + '/company_url', { url: url }) : Promise.resolve({ ok: true });
+    first.then(function (r) {
+      if (!r.ok) return r;
+      return api('POST', '/api/jobs/' + enc(j.id) + '/outreach', { search_size: size, keep: keep });
+    }).then(function (r) {
+      S.busy[key] = false;
+      if (!r.ok) {
+        if (r.status === 400 && r.data && r.data.needs === 'company_url') { f.needUrl = true; f.open = true; f.optsOpen = true; }
+        S.errors[key] = errText(r);
+      } else { f.open = false; f.optsOpen = false; f.needUrl = false; f.url = ''; }
+      return refreshNow();
+    }, function () { S.busy[key] = false; S.errors[key] = 'Cannot reach the server.'; render(); });
+  }
+
+  // ---------- People dialog ----------
+  var dlg = $('people-dlg');
+  $('people-close').appendChild(icon('x'));
+  $('people-close').addEventListener('click', function () { dlg.close(); });
+  dlg.addEventListener('close', function () { S.panel = null; });
+  dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close(); });
+  var dlgFocus = null;
+  dlg.addEventListener('close', function () {
+    var n = dlgFocus && document.querySelector('[data-fk="' + dlgFocus + '"]');
+    if (n) n.focus();
+  });
+
+  function msgTime(m) {
+    if (m.status === 'sent') return 'sent ' + fmtDT(m.sent_at);
+    if (m.status === 'queued' || m.status === 'sending') return m.scheduled_at ? 'planned ' + fmtDT(m.scheduled_at) : '';
+    return fmtDT(m.approved_at || m.created_at);
+  }
+  var MSG_TONE = { sent: 'ok', queued: 'accent', sending: 'accent', review: 'warn', failed: 'danger', skipped: 'neutral', drafting: 'neutral' };
+  function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+
+  function openJobPanel(j) {
+    S.panel = { id: j.id, data: null, err: null };
+    dlgFocus = 'pipe-' + j.id;
+    $('people-title').textContent = (j.company || '') + ', ' + (j.title || '');
+    renderPanel($('people-body'));
+    if (!dlg.open) dlg.showModal();
+    api('GET', '/api/jobs/' + enc(j.id) + '/outreach').then(function (res) {
+      if (!S.panel || S.panel.id !== j.id) return;
+      if (res.ok) { S.panel.data = res.data; S.panel.err = null; } else S.panel.err = errText(res);
+      render();
+      schedule();
+    }, function () { if (S.panel) { S.panel.err = 'Cannot reach the server.'; render(); } });
+  }
+
+  // Everything that needs you for one job, in pipeline order, with the same controls as the
+  // Outreach tab. It refreshes on the same poll, faster while something is running.
+  function renderPanel(body) {
+    clear(body);
+    var p = S.panel;
+    if (!p) return;
+    if (p.err) body.appendChild(h('div', { class: 'err' }, p.err));
+    if (!p.data) { if (!p.err) body.appendChild(h('div', { class: 'empty' }, 'Loading')); return; }
+    var d = p.data, j = d.job, o = j.outreach || {}, s = stageOf(j);
+    var proposed = (d.people || []).filter(function (x) { return x.status === 'proposed'; }).sort(byFit);
+    var head = h('div', { class: 'panel-head' });
+    body.appendChild(head);
+    if (s) {
+      head.appendChild(h('div', { class: 'panel-pipe' },
+        stepper(j, s, true),
+        h('div', { class: 'pipe-names' }, STAGES.map(function (n, i) {
+          return h('span', { class: i === s.idx && !s.complete ? 'cur t-' + s.tone : (s.complete || i < s.idx ? 'done' : null) }, n);
+        })),
+        h('div', { class: 'panel-now tone-' + s.tone }, s.tone === 'work' ? h('span', { class: 'working-dot' }) : null, s.label)));
+    }
+    if (proposed.length) head.appendChild(approveAllBar(j.id, proposed.length));
+    if (o.state === 'failed') {
+      body.appendChild(h('div', { class: 'panel-fail' }, h('div', { class: 'err flush' }, o.error || 'The pipeline stopped.'), retryButton(j)));
+    }
+    var decided = (d.people || []).filter(function (x) { return x.status !== 'proposed'; });
+    var any = false;
+    function sec(title, list, fn, cls) {
+      if (!list.length) return;
+      any = true;
+      body.appendChild(h('section', { class: 'section panel-sec' },
+        h('h3', { class: 'section-head' }, title, h('span', { class: 'count' }, String(list.length))),
+        h('div', { class: cls || null }, list.map(fn))));
+    }
+    if (proposed.length) { any = true; body.appendChild(h('div', { class: 'panel-sec' }, proposed.map(personItem))); }
+    // People you saved first, at this company, who are not on the list yet.
+    sec('Saved contacts at ' + (j.company || 'this company'), j.contacts || [], function (c) {
+      var key = 'sc-' + c.id, busy = !!S.busy[key];
+      return h('div', { class: 'row-line' },
+        h('div', { class: 'grow' }, h('strong', null, c.name || 'Unnamed'), c.title ? h('span', { class: 'muted' }, ', ' + c.title) : null),
+        c.linkedin_url ? h('a', { href: c.linkedin_url, target: '_blank', rel: 'noopener noreferrer' }, 'Profile') : null,
+        h('button', { type: 'button', class: 'btn-sm', disabled: busy, 'data-fk': 'sc-' + c.id, 'aria-label': 'Add ' + (c.name || 'this contact') + ' to this job',
+          onclick: function () { post(key, '/api/people/' + enc(c.id) + '/attach', { job_id: j.id }); } }, busy ? 'Adding' : 'Add to this job'),
+        S.errors[key] ? h('div', { class: 'err full' }, S.errors[key]) : null);
+    }, 'compact');
+    sec('Emails to approve', d.review || [], reviewItem);
+    sec('LinkedIn notes', d.linkedin || [], linkedinItem);
+    sec('Being redrafted', d.drafting || [], function (m) {
+      return h('div', { class: 'row-line' }, nameLine(m), h('span', { class: 'working' }, h('span', { class: 'working-dot' }), 'Redrafting'));
+    }, 'compact');
+    sec('Scheduled', d.queued || [], function (m) {
+      var busy = !!S.busy[m.id];
+      return h('div', { class: 'row-line' }, nameLine(m),
+        h('span', { class: 'when' }, m.status === 'sending' ? 'Sending now' : fmtDT(m.scheduled_at)),
+        m.status === 'sending' ? null : h('button', { type: 'button', class: 'btn-sm', disabled: busy, 'data-fk': 'ppull-' + m.id,
+          onclick: function () { post(m.id, '/api/messages/' + enc(m.id) + '/pullback', {}); } }, 'Pull back'),
+        S.errors[m.id] ? h('div', { class: 'err full' }, S.errors[m.id]) : null);
+    }, 'compact');
+    sec('Failed', d.failed || [], function (m) {
+      var busy = !!S.busy[m.id];
+      return h('div', { class: 'row-line' }, nameLine(m), h('span', { class: 'err inrow' }, m.error || 'Failed with no error text.'),
+        h('button', { type: 'button', class: 'btn-sm', disabled: busy, 'data-fk': 'pretry-' + m.id,
+          onclick: function () { post(m.id, '/api/messages/' + enc(m.id) + '/retry', {}); } }, 'Retry'));
+    }, 'compact');
+    sec('Sent', d.sent || [], function (m) {
+      return h('div', { class: 'row-line' }, nameLine(m), h('span', { class: 'muted' }, m.channel === 'linkedin' ? 'LinkedIn' : 'Email'),
+        h('span', { class: 'when' }, fmtDT(m.sent_at)));
+    }, 'compact');
+    sec('Everyone found', decided, function (x) {
+      return h('div', { class: 'row-line' },
+        h('div', { class: 'grow' }, h('strong', null, x.name || 'Unnamed'), x.title ? h('span', { class: 'muted' }, ', ' + x.title) : null),
+        h('span', { class: 'pill ' + (x.status === 'approved' ? 'ok' : 'neutral') }, x.status === 'approved' ? 'Approved' : 'Skipped'),
+        x.email ? h('span', { class: 'muted mono' }, x.email) : null,
+        x.linkedin_url ? h('a', { href: x.linkedin_url, target: '_blank', rel: 'noopener noreferrer' }, 'Profile') : null);
+    }, 'compact');
+    if (!any && !(o.state in RUNNING) && o.state !== 'failed') body.appendChild(h('div', { class: 'empty' }, 'Nothing here yet.'));
+  }
+
+  // ---------- Outreach tab ----------
+  function post(key, url, body, after) {
+    S.busy[key] = true; delete S.errors[key]; render();
+    return api('POST', url, body).then(function (res) {
+      S.busy[key] = false;
+      if (!res.ok) { S.errors[key] = errText(res); render(); return res; }
+      if (after) after(res);
+      return refreshNow().then(function () { return res; });
+    }, function () { S.busy[key] = false; S.errors[key] = 'Cannot reach the server.'; render(); });
+  }
+
+  function who(m) {
+    var p = m.person || {}, j = m.job || {};
+    var top = h('div', { class: 'msg-who' }, h('strong', null, p.name || 'Unnamed'), p.title ? h('span', { class: 'muted' }, ', ' + p.title) : null);
+    var sub = h('div', { class: 'muted' }, j.company || '', j.company && j.title ? ', ' : '',
+      j.url ? h('a', { href: j.url, target: '_blank', rel: 'noopener noreferrer' }, j.title || 'role') : (j.title || ''));
+    return [top, sub];
+  }
+  function auditTone(n) { return n >= 80 ? 'tone-ok' : n >= 60 ? 'tone-warn' : 'tone-danger'; }
+
+  // The mailer appends your signature (profile outreach.signature) to every email; this shows the same text.
+  function signature() { return (S.profile && S.profile.signature) || '(no signature set: add outreach.signature to profile/profile.yaml)'; }
+
+  function reviewItem(m) {
+    var key = m.id, ed = S.edits[key] || (S.edits[key] = { subject: m.subject || '', body: m.sent_text || m.draft || '' });
+    var rd = S.redraft[key] || (S.redraft[key] = { open: false, text: '' });
+    var busy = !!S.busy[key];
+    var lines = (ed.body.match(/\n/g) || []).length + 2;
+    var main = h('div', { class: 'msg-main' }, h('span', { class: 'ch-tag email' }, m.kind === 'followup' ? 'Follow-up' : 'Email'));
+    who(m).forEach(function (n) { main.appendChild(n); });
+    if (m.person && m.person.email) main.lastChild.appendChild(h('span', { class: 'muted' }, ' · ' + m.person.email));
+    main.appendChild(h('label', { class: 'field' }, h('span', null, 'Subject'),
+      h('input', { type: 'text', value: ed.subject, 'data-fk': 'subj-' + key, oninput: function (e) { ed.subject = e.target.value; } })));
+    main.appendChild(h('label', { class: 'field' }, h('span', null, 'Message'),
+      h('textarea', { rows: String(Math.min(18, Math.max(7, lines))), 'data-fk': 'body-' + key, oninput: function (e) { ed.body = e.target.value; } }, ed.body)));
+    main.appendChild(h('div', { class: 'sig', 'aria-label': 'Signature' }, signature()));
+    var acts = h('div', { class: 'msg-actions' },
+      h('button', { type: 'button', class: 'btn-primary btn-approve', disabled: busy, 'data-fk': 'approve-' + key,
+        onclick: function () {
+          var edited = ed.subject !== (m.subject || '') || ed.body !== (m.sent_text || m.draft || '');
+          post(key, '/api/messages/' + enc(m.id) + '/approve', edited ? { subject: ed.subject, body: ed.body } : {}, function () { delete S.edits[key]; });
+        } }, busy ? 'Approving' : 'Approve'),
+      h('button', { type: 'button', disabled: busy, 'aria-expanded': String(rd.open), 'data-fk': 'redraft-' + key, onclick: function () { rd.open = !rd.open; render(); } }, 'Redraft'),
+      h('button', { type: 'button', disabled: busy, 'data-fk': 'skip-' + key, onclick: function () { post(key, '/api/messages/' + enc(m.id) + '/skip', {}, function () { delete S.edits[key]; }); } }, 'Skip'));
+    main.appendChild(acts);
+    if (rd.open) {
+      main.appendChild(h('form', { class: 'redraft-row', onsubmit: function (e) {
+        e.preventDefault();
+        post(key, '/api/messages/' + enc(m.id) + '/redraft', { feedback: rd.text }, function () { rd.open = false; rd.text = ''; delete S.edits[key]; });
+      } },
+        h('input', { type: 'text', placeholder: 'What should change', 'aria-label': 'What should change', value: rd.text, 'data-fk': 'rdtext-' + key, oninput: function (e) { rd.text = e.target.value; } }),
+        h('button', { type: 'submit', class: 'btn-primary', disabled: busy || !rd.text.trim() }, 'Redraft')));
+    }
+    if (S.errors[key]) main.appendChild(h('div', { class: 'err' }, S.errors[key]));
+
+    var aside = h('aside', { class: 'audit', 'aria-label': 'Audit' });
+    if (m.audit_score !== null && m.audit_score !== undefined) {
+      aside.appendChild(h('div', { class: 'audit-label' }, 'Audit score'));
+      aside.appendChild(h('div', { class: 'audit-score' }, h('b', { class: auditTone(m.audit_score) }, String(m.audit_score)), h('span', { class: 'muted' }, 'of 100')));
+    } else aside.appendChild(h('div', { class: 'muted' }, 'Not audited'));
+    var an = toList(m.audit_notes), vn = toList(m.validator_notes);
+    if (an.length) { aside.appendChild(h('div', { class: 'audit-label' }, 'Audit notes')); aside.appendChild(h('ul', { class: 'notes' }, an.map(function (t) { return h('li', null, t); }))); }
+    if (vn.length) { aside.appendChild(h('div', { class: 'audit-label' }, 'Validator notes')); aside.appendChild(h('ul', { class: 'notes warn' }, vn.map(function (t) { return h('li', null, t); }))); }
+    return h('article', { class: 'msg review ch-email' }, main, aside);
+  }
+
+  function copyText(text, key) {
+    function done() { S.copied[key] = true; render(); setTimeout(function () { delete S.copied[key]; render(); }, 1200); }
+    try {
+      navigator.clipboard.writeText(text).then(done, function () { legacyCopy(text); done(); });
+    } catch (e) { legacyCopy(text); done(); }
+  }
+  function legacyCopy(text) {
+    var t = document.createElement('textarea'); t.value = text; t.style.position = 'fixed'; t.style.opacity = '0';
+    document.body.appendChild(t); t.select();
+    try { document.execCommand('copy'); } catch (e) { /* ignore */ }
+    document.body.removeChild(t);
+  }
+
+  function linkedinItem(m) {
+    var key = m.id, ed = S.edits[key] || (S.edits[key] = { body: m.draft || '' });
+    var busy = !!S.busy[key], p = m.person || {};
+    var main = h('div', { class: 'msg-main li-note' }, h('span', { class: 'ch-tag li' }, 'LinkedIn'));
+    who(m).forEach(function (n) { main.appendChild(n); });
+    main.appendChild(h('label', { class: 'field' }, h('span', null, 'Note'),
+      h('textarea', { rows: '3', value: ed.body, 'data-fk': 'note-' + key, oninput: function (e) { ed.body = e.target.value; } }, ed.body)));
+    var acts = h('div', { class: 'msg-actions' },
+      h('button', { type: 'button', 'data-fk': 'copy-' + key, onclick: function () { copyText(ed.body, key); } },
+        icon(S.copied[key] ? 'check' : 'copy'), S.copied[key] ? 'Copied' : 'Copy'),
+      p.linkedin_url ? h('a', { class: 'btn', href: p.linkedin_url, target: '_blank', rel: 'noopener noreferrer' }, 'Open profile', icon('external')) : null,
+      h('button', { type: 'button', class: 'btn-primary', disabled: busy, 'data-fk': 'sent-' + key,
+        onclick: function () {
+          var edited = ed.body !== (m.draft || '');
+          post(key, '/api/messages/' + enc(m.id) + '/linkedin_sent', edited ? { text: ed.body } : {}, function () { delete S.edits[key]; });
+        } }, 'Mark sent'),
+      h('button', { type: 'button', disabled: busy, 'data-fk': 'skip-' + key, onclick: function () { post(key, '/api/messages/' + enc(m.id) + '/skip', {}, function () { delete S.edits[key]; }); } }, 'Skip'));
+    main.appendChild(acts);
+    if (S.errors[key]) main.appendChild(h('div', { class: 'err' }, S.errors[key]));
+    var an = toList(m.audit_notes);
+    var aside = h('aside', { class: 'audit', 'aria-label': 'Audit' });
+    if (m.audit_score !== null && m.audit_score !== undefined) {
+      aside.appendChild(h('div', { class: 'audit-label' }, 'Audit score'));
+      aside.appendChild(h('div', { class: 'audit-score' }, h('b', { class: auditTone(m.audit_score) }, String(m.audit_score)), h('span', { class: 'muted' }, 'of 100')));
+    }
+    if (an.length) { aside.appendChild(h('div', { class: 'audit-label' }, 'Audit notes')); aside.appendChild(h('ul', { class: 'notes' }, an.map(function (t) { return h('li', null, t); }))); }
+    return h('article', { class: 'msg ch-li' }, main, aside);
+  }
+
+  function nameLine(m) {
+    var p = m.person || {}, j = m.job || {};
+    return h('div', { class: 'grow' }, h('strong', null, p.name || 'Unnamed'),
+      h('span', { class: 'muted' }, [j.company, m.subject].filter(Boolean).length ? ', ' + [j.company, m.subject].filter(Boolean).join(', ') : ''));
+  }
+
+  function section(title, count, kids, emptyText) {
+    var s = h('section', { class: 'section' }, h('h2', { class: 'section-head' }, title, h('span', { class: 'count' }, String(count))));
+    if (!count) s.appendChild(h('div', { class: 'empty boxed slim' }, emptyText));
+    else s.appendChild(kids);
+    return s;
+  }
+
+  // One person proposed for outreach. Nothing is drafted for anyone until you approve them.
+  // A line worth showing has at least one letter; LinkedIn sometimes returns "--" for a headline.
+  function said(s) { return s && /[A-Za-z]/.test(s) ? s : ''; }
+  function fitTone(n) { return n >= 8 ? 'ok' : n >= 6 ? 'accent' : 'neutral'; }
+  // Best fit first; people without a score keep the ranking's order after them.
+  // "People to approve · N" with Approve all, shared by the panel (pinned) and the Outreach tab.
+  function approveAllBar(jobId, n) {
+    var key = 'all:' + jobId, busy = !!S.busy[key];
+    return h('div', { class: 'approve-bar' },
+      h('h3', { class: 'section-head' }, 'People to approve', h('span', { class: 'count' }, String(n))),
+      h('button', { type: 'button', class: 'btn-primary btn-sm', disabled: busy, 'data-fk': 'approveall-' + jobId,
+        onclick: function () { post(key, '/api/jobs/' + enc(jobId) + '/people/approve_all', {}); } },
+        busy ? 'Approving' : 'Approve all (' + n + ')'),
+      S.errors[key] ? h('div', { class: 'err full' }, S.errors[key]) : null);
+  }
+  function byFit(a, b) { return (typeof b.fit === 'number' ? b.fit : -1) - (typeof a.fit === 'number' ? a.fit : -1) || (a.rank || 0) - (b.rank || 0); }
+  function personItem(pp) {
+    var key = 'person:' + pp.id, busy = !!S.busy[key];
+    var facts = [pp.title, pp.location].filter(Boolean).join(', ');
+    var head = said(pp.headline), edu = said(pp.education);
+    var main = h('div', { class: 'msg-main' },
+      h('div', { class: 'who' },
+        typeof pp.fit === 'number' ? h('span', { class: 'fit pill ' + fitTone(pp.fit), title: 'Fit for getting this application seen' }, h('b', null, String(pp.fit)), '/10') : null,
+        h('strong', null, pp.name || 'Unnamed'), facts ? h('span', { class: 'muted' }, ', ' + facts) : null),
+      pp.why ? h('p', { class: 'why' }, pp.why) : null,
+      (head && head !== pp.title) ? h('div', { class: 'fact muted small' }, icon('work'), h('span', null, head)) : null,
+      edu ? h('div', { class: 'fact muted small' }, icon('school'), h('span', null, edu)) : null,
+      pp.note ? h('div', { class: 'warn-note' }, pp.note) : null);
+    var acts = h('div', { class: 'msg-actions' },
+      h('button', { type: 'button', class: 'btn-primary', disabled: busy, 'data-fk': 'pa-' + pp.id,
+        onclick: function () { post(key, '/api/people/' + enc(pp.id) + '/decide', { decision: 'approve' }); } }, 'Approve'),
+      h('button', { type: 'button', disabled: busy, 'data-fk': 'pr-' + pp.id,
+        onclick: function () { post(key, '/api/people/' + enc(pp.id) + '/decide', { decision: 'reject' }); } }, 'Skip'),
+      pp.linkedin_url ? h('a', { class: 'btn', href: pp.linkedin_url, target: '_blank', rel: 'noopener noreferrer' }, 'Open profile', icon('external')) : null);
+    main.appendChild(acts);
+    if (S.errors[key]) main.appendChild(h('div', { class: 'err' }, S.errors[key]));
+    return h('article', { class: 'msg person-card' }, main);
+  }
+  function peopleByJob(list) {
+    var groups = [], seen = {};
+    list.forEach(function (pp) {
+      var jid = (pp.job || {}).id || '';
+      if (!(jid in seen)) { seen[jid] = groups.length; groups.push({ job: pp.job || {}, people: [] }); }
+      groups[seen[jid]].people.push(pp);
+    });
+    return h('div', null, groups.map(function (g) {
+      var key = 'all:' + (g.job.id || ''), busy = !!S.busy[key];
+      return h('div', { class: 'person-group' },
+        h('div', { class: 'group-bar' },
+          h('h3', { class: 'group-head' }, (g.job.company || 'Unknown company') + ', ' + (g.job.title || '')),
+          h('button', { type: 'button', class: 'btn-sm', disabled: busy, 'data-fk': 'approveall-q-' + g.job.id,
+            onclick: function () { post(key, '/api/jobs/' + enc(g.job.id) + '/people/approve_all', {}); } },
+            busy ? 'Approving' : 'Approve all (' + g.people.length + ')')),
+        S.errors[key] ? h('div', { class: 'err' }, S.errors[key]) : null,
+        h('div', null, g.people.slice().sort(byFit).map(personItem)));
+    }));
+  }
+
+  function renderOutreach(root) {
+    var q = S.queue;
+    if (!q) { root.appendChild(h('div', { class: 'empty' }, S.down ? 'The queue is not loaded yet.' : 'Loading the queue')); return; }
+    var review = q.review || [], li = q.linkedin || [], queued = q.queued || [], failed = q.failed || [], sent = q.recent_sent || [];
+    var ppl = q.people || [];
+    root.appendChild(section('People to approve', ppl.length, peopleByJob(ppl), 'No one waiting for your approval.'));
+    root.appendChild(section('Emails to approve', review.length, h('div', null, review.map(reviewItem)), 'No emails to approve.'));
+    root.appendChild(section('LinkedIn notes', li.length, h('div', null, li.map(linkedinItem)), 'No LinkedIn notes to send.'));
+    root.appendChild(section('Scheduled', queued.length, h('div', { class: 'compact' }, queued.map(function (m) {
+      var busy = !!S.busy[m.id];
+      var row = h('div', { class: 'row-line' }, nameLine(m),
+        h('span', { class: 'when' }, m.status === 'sending' ? 'Sending now' : fmtDT(m.scheduled_at)),
+        m.status === 'sending' ? null : h('button', { type: 'button', class: 'btn-sm', disabled: busy, 'data-fk': 'pull-' + m.id,
+          onclick: function () { post(m.id, '/api/messages/' + enc(m.id) + '/pullback', {}); } }, 'Pull back'));
+      if (S.errors[m.id]) row.appendChild(h('div', { class: 'err full' }, S.errors[m.id]));
+      return row;
+    })), 'Nothing scheduled.'));
+    root.appendChild(section('Failed', failed.length, h('div', { class: 'compact' }, failed.map(function (m) {
+      var busy = !!S.busy[m.id];
+      var row = h('div', { class: 'row-line' }, nameLine(m),
+        h('span', { class: 'err inrow' }, m.error || 'Failed with no error text.'),
+        h('button', { type: 'button', class: 'btn-sm', disabled: busy, 'data-fk': 'retry-' + m.id,
+          onclick: function () { post(m.id, '/api/messages/' + enc(m.id) + '/retry', {}); } }, 'Retry'));
+      if (S.errors[m.id]) row.appendChild(h('div', { class: 'err full' }, S.errors[m.id]));
+      return row;
+    })), 'Nothing failed.'));
+    var held = q.held || [];
+    if (held.length) root.appendChild(section('Held', held.length, h('div', { class: 'compact' }, held.map(function (m) {
+      var busy = !!S.busy[m.id];
+      var row = h('div', { class: 'row-line' }, nameLine(m),
+        h('span', { class: 'muted inrow' }, (m.error || 'Held').replace(/^Held:\s*/, '')),
+        h('button', { type: 'button', class: 'btn-sm', disabled: busy, 'data-fk': 'release-' + m.id,
+          onclick: function () { post(m.id, '/api/messages/' + enc(m.id) + '/release', {}); } }, 'Back to review'));
+      if (S.errors[m.id]) row.appendChild(h('div', { class: 'err full' }, S.errors[m.id]));
+      return row;
+    })), ''));
+    root.appendChild(section('Recently sent', sent.length, h('div', { class: 'compact' }, sent.map(function (m) {
+      return h('div', { class: 'row-line' }, nameLine(m),
+        h('span', { class: 'muted' }, m.channel === 'linkedin' ? 'LinkedIn' : 'Email'),
+        h('span', { class: 'when' }, fmtDT(m.sent_at)));
+    })), 'Nothing sent yet.'));
+    var bounced = q.bounced || [];
+    if (bounced.length) root.appendChild(section('Bounced', bounced.length, h('div', { class: 'compact' }, bounced.map(function (m) {
+      return h('div', { class: 'row-line' }, nameLine(m),
+        h('span', { class: 'muted mono' }, (m.person && m.person.email) || ''),
+        h('span', { class: 'err inrow' }, (m.error || 'Bounced').replace(/^Bounced:\s*/, '')),
+        h('span', { class: 'when' }, fmtDT(m.sent_at)));
+    })), ''));
+  }
+
+
+  // ---------- Inbox tab ----------
+  // What came in about your applications, what the server did about each, and the way to undo it. One card per
+  // job: the newest email, the older ones a click away, the stage action once in the header.
+  var KINDS = [['rejection', 'Rejection', 'danger'], ['paused', 'Search paused', 'warn'], ['out_of_office', 'Away', 'warn'],
+    ['interview', 'Interview', 'ok'], ['assessment', 'Assessment', 'accent'], ['reply', 'Reply', 'accent'],
+    ['received', 'Received', 'neutral'], ['my_reply', 'You replied', 'neutral'], ['other', 'Other', 'neutral']];
+  // When the classifier gave no company: a sender on the company's own domain names it ("sam@brightwave.com" is Brightwave); an ATS
+  // or a free mail host does not, so the sender's name is used ("Harbor Labs Hiring Team" is Harbor Labs, "Rivera, Alex" is a person).
+  var FREE_MAIL = ['gmail.com', 'googlemail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'icloud.com', 'me.com', 'aol.com', 'proton.me', 'protonmail.com'];
+  function senderCompany(i) {
+    var addr = (i.from_address || '').toLowerCase(), dom = addr.indexOf('@') !== -1 ? addr.split('@').pop() : '';
+    if (dom && i.why !== 'ats' && i.why !== 'linkedin' && FREE_MAIL.indexOf(dom) === -1) {
+      var parts = dom.split('.'), stem = parts.length > 1 ? parts[parts.length - 2] : parts[0];
+      if (stem) return stem.charAt(0).toUpperCase() + stem.slice(1);
+    }
+    var name = (i.from_name || '').trim();
+    if (!name || name.indexOf(',') !== -1) return '';
+    return name.replace(/\s+(hiring|recruiting|recruitment|talent|careers|people|human resources|hr|team)\b.*$/i, '').trim();
+  }
+  // The stage "Add as a job" starts from, by what the email says. A rejection or a pause is applied by the read itself.
+  var KIND_STAGE = { rejection: 'rejected', paused: 'paused', assessment: 'assessment', interview: 'interviewing', reply: 'heard_back' };
+  function kindOf(k) { return KINDS.filter(function (x) { return x[0] === k; })[0] || KINDS[KINDS.length - 1]; }
+  function stageLabel(st) { var s = JOB_STAGES.filter(function (x) { return x[0] === st; })[0]; return s ? s[1] : st; }
+  // What the server did about an email, as pieces: text, or a link (the follow-up waits under Emails to approve).
+  function didParts(i) {
+    var a = i.acted || {}, out = [];
+    if (i.status === 'undone') return ['undone'];
+    if (a.held && a.held.length) out.push('held ' + plural(a.held.length, 'unsent message', 'unsent messages'));
+    if (a.stage_before) out.push('marked ' + stageLabel(a.stage_set || 'rejected'));
+    if (a.ooo_until) out.push('back ' + fmtD(a.ooo_until + 'T12:00:00'));
+    if (a.followup) out.push({ href: '#outreach', text: 'follow-up drafted for review' });
+    if (!out.length && i.kind === 'rejection' && i.job) out.push('nothing unsent to hold');
+    return out;
+  }
+  function didNode(i) {
+    var parts = didParts(i), kids = [];
+    if (!parts.length) return null;
+    parts.forEach(function (p, k) {
+      if (k) kids.push(', ');
+      var text = typeof p === 'string' ? p : p.text;
+      if (k === 0) text = cap(text);
+      kids.push(typeof p === 'string' ? text : h('a', { href: p.href }, text));
+    });
+    return h('div', { class: i.status === 'undone' ? 'muted' : 'did' }, kids);
+  }
+  function undoable(i) { return i.status !== 'undone' && i.acted && Object.keys(i.acted).length > 0; }
+  function undoButton(i) {
+    var key = 'inbox-' + i.id;
+    return h('button', { type: 'button', class: 'btn-sm', disabled: !!S.busy[key], 'data-fk': 'undo-' + i.id,
+      onclick: function () { post(key, '/api/inbox/' + enc(i.id) + '/undo', {}); } }, 'Undo');
+  }
+  // One email on one line: kind, who and what, the quoted evidence, what was done, and the controls for it.
+  // o.card: inside a job's card, where the header already names the job and carries the stage action.
+  function emailRow(i, jobs, o) {
+    o = o || {};
+    var k = kindOf(i.kind), key = 'inbox-' + i.id, busy = !!S.busy[key];
+    var fx = S.fix[i.id] || (S.fix[i.id] = { open: false, kind: i.kind, job_id: i.job_id || '' });
+    var j = i.job, mine = i.kind === 'my_reply';
+    var head = h('div', { class: 'grow' },
+      o.card ? null : h('div', null, j ? h('strong', null, j.company || '') : h('strong', { class: 'tone-warn' }, 'Not matched to a job'),
+        j && j.title ? h('span', { class: 'muted' }, ', ' + j.title) : null),
+      h('div', { class: 'muted' }, (mine ? 'To ' + (i.to_address || 'them') + ' · ' : (i.from_name ? i.from_name + ' · ' : '')) + (i.subject || '(no subject)')),
+      i.evidence ? h('div', { class: 'quote' }, '“' + i.evidence + '”') : null,
+      mine && i.snippet ? h('div', { class: 'quote' }, i.snippet) : null,
+      i.delegate ? h('div', { class: 'muted' }, 'Says to contact: ' + i.delegate) : null,
+      didNode(i));
+    var acts = h('div', { class: 'inbox-acts' });
+    if (undoable(i) && !o.noUndo) acts.appendChild(undoButton(i));
+    var am = null;
+    if (!i.job_id && i.status !== 'undone' && i.kind !== 'out_of_office' && i.kind !== 'other') {
+      // An email about a company you applied to outside the tool: the job can be made from the email itself.
+      am = S.addMail[i.id] || (S.addMail[i.id] = { open: false, f: newAddForm({ company: i.guess_company || senderCompany(i), title: i.guess_title || '',
+        applied_at: (i.received_at || '').slice(0, 10) || undefined, stage: KIND_STAGE[i.kind] || 'applied' }) });
+      acts.appendChild(h('button', { type: 'button', class: 'btn-sm', 'aria-expanded': String(am.open), disabled: busy,
+        'data-fk': 'addjob-' + i.id, onclick: function () { am.open = !am.open; render(); } }, 'Add as a job'));
+    }
+    if (!mine) acts.appendChild(h('button', { type: 'button', class: 'btn-sm btn-quiet', 'aria-expanded': String(fx.open), disabled: busy,
+      'data-fk': 'fix-' + i.id, onclick: function () { fx.open = !fx.open; render(); } }, 'Fix'));
+    var row = h('div', { class: 'row-line inbox-row' }, h('span', { class: 'pill ' + k[2] }, k[1]), head,
+      h('span', { class: 'when' }, fmtDT(i.received_at)), acts);
+    if (am && am.open) {
+      row.appendChild(addJobForm({ f: am.f, pre: 'addmail-' + i.id + '-', key: 'addjob-' + i.id, url: '/api/inbox/' + enc(i.id) + '/add_job',
+        reread: i.why !== 'ats' && i.why !== 'linkedin', noJd: true,
+        done: function () { delete S.addMail[i.id]; }, cancel: function () { am.open = false; render(); } }));
+    }
+    if (fx.open) {
+      row.appendChild(h('form', { class: 'fix-row full', onsubmit: function (e) {
+        e.preventDefault();
+        post(key, '/api/inbox/' + enc(i.id) + '/set', { kind: fx.kind, job_id: fx.job_id || null }, function () { fx.open = false; });
+      } },
+        h('label', null, h('span', { class: 'muted' }, 'It is a '),
+          h('select', { 'data-fk': 'fixkind-' + i.id, onchange: function (e) { fx.kind = e.target.value; } },
+            KINDS.filter(function (o2) { return o2[0] !== 'my_reply'; }).map(function (o2) { return h('option', { value: o2[0], selected: o2[0] === fx.kind ? '' : null }, o2[1]); }))),
+        h('label', null, h('span', { class: 'muted' }, 'about '),
+          h('select', { 'data-fk': 'fixjob-' + i.id, onchange: function (e) { fx.job_id = e.target.value; } },
+            [h('option', { value: '', selected: !fx.job_id ? '' : null }, 'no tracked job')].concat(jobs.map(function (o2) {
+              return h('option', { value: o2.id, selected: o2.id === fx.job_id ? '' : null }, (o2.company || '') + ', ' + (o2.title || ''));
+            })))),
+        h('button', { type: 'submit', class: 'btn-sm btn-primary', disabled: busy, 'data-fk': 'fixsave-' + i.id }, busy ? 'Saving' : 'Save')));
+    }
+    if (S.errors[key]) row.appendChild(h('div', { class: 'err full' }, S.errors[key]));
+    return row;
+  }
+  // One job: its stage and the one thing to do about it in the header, its emails newest first underneath, collapsed
+  // to the newest. g = {job, emails, needs}: needs are the emails the server says need you (one per suggested stage).
+  function jobCard(g, jobs) {
+    var j = g.job, st = jobStageOf(j), uTarget = g.emails.filter(undoable)[0];
+    var open = S.inboxOpen[j.id] !== undefined ? S.inboxOpen[j.id] : !!S.inboxJob;
+    var shown = open ? g.emails : g.emails.slice(0, 1);
+    var acts = h('div', { class: 'inbox-acts' });
+    g.needs.forEach(function (n) {
+      var key = 'inbox-' + n.id;
+      acts.appendChild(h('button', { type: 'button', class: 'btn-sm', disabled: !!S.busy[key], 'data-fk': 'sugg-' + n.id,
+        onclick: function () { post(key, '/jobs/' + enc(j.id) + '/stage', { stage: n.suggest_stage, note: (n.subject || '').slice(0, 200) }); } },
+        'Move to ' + stageLabel(n.suggest_stage)));
+    });
+    if (uTarget) acts.appendChild(undoButton(uTarget));
+    var errs = g.needs.concat(uTarget ? [uTarget] : []).map(function (i) { return S.errors['inbox-' + i.id]; }).filter(Boolean);
+    var card = h('article', { class: 'inbox-card', 'aria-label': (j.company || '') + (j.title ? ', ' + j.title : '') },
+      h('div', { class: 'ic-head' },
+        h('div', { class: 'ic-title' }, h('strong', null, j.company || ''), j.title ? h('span', { class: 'muted' }, ', ' + j.title) : null),
+        h('span', { class: 'pill ' + st[2], title: 'Where the application stands now' }, st[1]),
+        handoffLinks(j),
+        acts.firstChild ? acts : null),
+      errs.length ? h('div', { class: 'err' }, errs[0]) : null,
+      h('div', { class: 'ic-lines' }, shown.map(function (i) { return emailRow(i, jobs, { card: true, noUndo: i === uTarget }); })));
+    if (g.emails.length > 1) {
+      card.appendChild(h('button', { type: 'button', class: 'link-btn ic-more', 'aria-expanded': String(open), 'data-fk': 'ic-more-' + j.id,
+        onclick: function () { S.inboxOpen[j.id] = !open; render(); } }, open ? 'Show fewer' : (g.emails.length - 1) + ' earlier'));
+    }
+    return card;
+  }
+  var TIMELINE = ['rejection', 'paused', 'interview', 'assessment', 'reply'];
+  function renderInbox(root) {
+    var d = S.inbox;
+    if (!d) { root.appendChild(h('div', { class: 'empty' }, S.down ? 'The inbox is not loaded yet.' : 'Loading the inbox')); return; }
+    var items = d.items || [], jobs = d.jobs || [], busy = !!S.busy.inboxcheck || d.busy;
+    root.appendChild(h('div', { class: 'inbox-bar' },
+      h('span', { class: 'muted' }, d.last_checked ? 'Last read ' + fmtDT(d.last_checked) + '. Reads every 30 minutes and before each send.' : 'Not read yet.'),
+      h('button', { type: 'button', class: 'btn-sm', disabled: busy, 'data-fk': 'inbox-check',
+        onclick: function () { post('inboxcheck', '/api/inbox/check', {}); } }, busy ? 'Reading' : 'Read inbox now'),
+      d.error ? h('div', { class: 'err full' }, 'Last read had a problem: ' + d.error) : null,
+      S.errors.inboxcheck ? h('div', { class: 'err full' }, S.errors.inboxcheck) : null));
+    // The Jobs row's Inbox cell links here with one job: show only its emails, and say so.
+    var only = S.inboxJob, onlyJob = null;
+    if (only) {
+      onlyJob = jobs.filter(function (o) { return o.id === only; })[0] || (items.filter(function (i) { return i.job_id === only; })[0] || {}).job || null;
+      items = items.filter(function (i) { return i.job_id === only; });
+      root.appendChild(h('div', { class: 'inbox-bar filter-bar' },
+        h('span', null, 'Emails about ', h('strong', null, onlyJob ? (onlyJob.company || '') + (onlyJob.title ? ', ' + onlyJob.title : '') : 'one job')),
+        h('a', { class: 'btn btn-sm', href: '#inbox', 'data-fk': 'inbox-all' }, 'Show all')));
+    }
+    var live = items.filter(function (i) { return i.status !== 'undone'; });
+    // What needs you is decided on the server (inbox_needs), so this section, the strip and the bell agree.
+    var needSet = {};
+    (d.needs || []).forEach(function (id) { needSet[id] = true; });
+    var needs = live.filter(function (i) { return needSet[i.id]; });
+
+    // A job's conversation: its rejections, interviews, assessments and replies, newest first. Each job is one
+    // card, filed under the first of Needs you, Rejections, In conversation that applies to it.
+    var groups = {}, order = [];
+    live.forEach(function (i) {
+      if (!i.job_id || !i.job || TIMELINE.indexOf(i.kind) === -1) return;
+      var g = groups[i.job_id] || (groups[i.job_id] = { job: i.job, emails: [], needs: [] });
+      if (!g.emails.length) order.push(g);
+      g.emails.push(i);
+      if (needSet[i.id]) g.needs.push(i);
+    });
+    // Your own replies sit in the timeline of a job that already has a card; alone they do not make one.
+    live.forEach(function (i) {
+      if (i.kind === 'my_reply' && i.job_id && groups[i.job_id]) groups[i.job_id].emails.push(i);
+    });
+    order.forEach(function (g) { g.emails.sort(function (a, b) { return a.received_at < b.received_at ? 1 : a.received_at > b.received_at ? -1 : 0; }); });
+    var needsCards = order.filter(function (g) { return g.needs.length; });
+    var rejCards = order.filter(function (g) { return !g.needs.length && g.emails.some(function (i) { return i.kind === 'rejection'; }); });
+    var talkCards = order.filter(function (g) { return needsCards.indexOf(g) === -1 && rejCards.indexOf(g) === -1; });
+    var unmatchedNeeds = needs.filter(function (i) { return !i.job_id; });
+    // Mail from a company you are not tracking that says something (an interview, an assessment, a reply, a pause): it has
+    // no card to live on, so it is listed here with Add as a job, which is the way to start tracking it.
+    var loose = live.filter(function (i) { return !i.job_id && ['interview', 'assessment', 'reply', 'paused'].indexOf(i.kind) !== -1; });
+    var away = live.filter(function (i) { return i.kind === 'out_of_office'; });
+    var otherRej = live.filter(function (i) { return i.kind === 'rejection' && !i.job && !needSet[i.id]; });
+    var rest = items.filter(function (i) { return i.status === 'undone' || ['received', 'other'].indexOf(i.kind) !== -1; });
+
+    function cards(gs) { return gs.map(function (g) { return jobCard(g, jobs); }); }
+    function sec(title, count, kids, emptyText) {
+      if (only && !count) return;
+      root.appendChild(section(title, count, h('div', { class: 'inbox-list' }, kids), emptyText));
+    }
+    // Cards and the unmatched rows that need you, newest first. The count is what the strip says (emails), not cards.
+    var needsKids = needsCards.map(function (g) { return { at: g.emails[0].received_at, node: jobCard(g, jobs) }; })
+      .concat(unmatchedNeeds.map(function (i) { return { at: i.received_at, node: h('div', { class: 'compact' }, emailRow(i, jobs)) }; }))
+      .sort(function (a, b) { return a.at < b.at ? 1 : a.at > b.at ? -1 : 0; }).map(function (x) { return x.node; });
+    sec('Needs you', needs.length, needsKids, 'Nothing to confirm.');
+    sec('Rejections', rejCards.length, cards(rejCards), 'No rejections on jobs you are tracking.');
+    if (loose.length) sec('Not matched to a job', loose.length, h('div', { class: 'compact' }, loose.map(function (i) { return emailRow(i, jobs); })), 'None.');
+    if (otherRej.length) sec('Rejections for jobs not tracked', otherRej.length, h('div', { class: 'compact' }, otherRej.map(function (i) { return emailRow(i, jobs); })),
+      'None.');
+    sec('Away replies', away.length, h('div', { class: 'compact' }, away.map(function (i) { return emailRow(i, jobs); })), 'No away replies.');
+    sec('In conversation', talkCards.length, cards(talkCards), 'None yet.');
+    if (only && !items.length) root.appendChild(h('div', { class: 'empty boxed slim' }, 'No emails about this job.'));
+    var folded = [];
+    if (rest.length) folded.push(plural(rest.length, 'acknowledgement or other email', 'acknowledgements and other emails'));
+    if (folded.length) {
+      root.appendChild(h('details', { class: 'section inbox-more' },
+        h('summary', null, folded.join(', ')),
+        h('div', { class: 'compact' }, rest.map(function (i) { return emailRow(i, jobs); }))));
+    }
+  }
+
+  // ---------- Monitor tab ----------
+  function sw(label, on, key, onclick) {
+    return h('button', { type: 'button', class: 'switch', role: 'switch', 'aria-checked': String(!!on), disabled: !!S.busy[key], 'data-fk': 'sw-' + key, onclick: onclick },
+      h('span', { class: 'sw-track' }, h('span', { class: 'sw-thumb' })), label);
+  }
+  function setSetting(key, body) {
+    S.busy[key] = true; delete S.errors[key]; render();
+    return api('POST', '/settings', body).then(function (res) {
+      S.busy[key] = false;
+      if (!res.ok) S.errors[key] = errText(res);
+      S.autoConfirm = false;
+      return res.ok ? refreshNow() : render();
+    }, function () { S.busy[key] = false; S.errors[key] = 'Cannot reach the server.'; render(); });
+  }
+  function kv(pairs) {
+    var dl = h('dl', { class: 'kv' });
+    pairs.forEach(function (p) { dl.appendChild(h('dt', null, p[0])); dl.appendChild(h('dd', { class: p[2] || null }, p[1])); });
+    return dl;
+  }
+  function miniTable(cols, rows, emptyText) {
+    if (!rows.length) return h('div', { class: 'muted' }, emptyText);
+    return h('table', { class: 'mini' },
+      h('thead', null, h('tr', null, cols.map(function (c, i) { return h('th', { scope: 'col', class: i > 0 && c[1] ? 'r' : null }, c[0]); }))),
+      h('tbody', null, rows.map(function (r) { return h('tr', null, r.map(function (v, i) { return h('td', { class: i > 0 && cols[i][1] ? 'r' : null }, v); })); })));
+  }
+
+  function renderMonitor(root) {
+    var m = S.monitor;
+    if (!m) { root.appendChild(h('div', { class: 'empty' }, S.down ? 'Monitor data is not loaded yet.' : 'Loading monitor')); return; }
+    var s = m.sending || {}, q = m.quality || {}, sp = m.spend || {};
+    if (S.profile && !feat('outreach') && !feat('email')) {
+      root.appendChild(h('div', { class: 'empty' }, 'The Monitor tracks outreach spend, draft quality, sending and email. ' +
+        'Outreach and email are both off; turn them on in profile/profile.yaml (docs/outreach.md, docs/email.md).'));
+      return;
+    }
+    var grid = h('div', { class: 'mon-grid' });
+
+    // Sending
+    var sendSec = h('section', { 'data-feature': 'outreach' }, h('h2', null, 'Sending'),
+      kv([
+        ['Sent today', or(s.sent_today, 0) + ' of ' + or(s.daily_cap, 0), 'big'],
+        ['Window', s.window || ''],
+        ['Gap', s.gap_minutes ? s.gap_minutes[0] + ' to ' + s.gap_minutes[1] + ' minutes' : ''],
+        ['Next send', s.next_send_at ? fmtDT(s.next_send_at) : 'none scheduled']
+      ]));
+    var switches = h('div', { class: 'switches' },
+      sw('Approve people automatically', m.people_auto, 'people', function () { setSetting('people', { people_auto: !m.people_auto }); }),
+      sw('Auto mode', m.auto, 'auto', function () {
+        if (m.auto) setSetting('auto', { outreach_auto: false });
+        else { S.autoConfirm = !S.autoConfirm; render(); }
+      }));
+    if (S.errors.people) switches.appendChild(h('div', { class: 'err' }, S.errors.people));
+    if (S.errors.auto) switches.appendChild(h('div', { class: 'err' }, S.errors.auto));
+    if (S.autoConfirm && !m.auto) {
+      switches.appendChild(h('div', { class: 'confirm', role: 'group', 'aria-label': 'Confirm auto mode' },
+        h('p', null, 'Turn on auto mode? Drafts that pass the checks will send without your click, inside the same window and the cap of ' + or(s.daily_cap, 0) + ' a day.'),
+        h('div', { class: 'form-actions' },
+          h('button', { type: 'button', class: 'btn-primary', 'data-fk': 'auto-yes', onclick: function () { setSetting('auto', { outreach_auto: true }); } }, 'Turn on'),
+          h('button', { type: 'button', 'data-fk': 'auto-no', onclick: function () { S.autoConfirm = false; render(); } }, 'Cancel'))));
+    }
+    switches.appendChild(sw('Pause sending', m.paused, 'paused', function () { setSetting('paused', { outreach_paused: !m.paused }); }));
+    if (S.errors.paused) switches.appendChild(h('div', { class: 'err' }, S.errors.paused));
+    sendSec.appendChild(switches);
+    grid.appendChild(sendSec);
+
+    // Delivery: whether guessed addresses earn their keep.
+    var b = m.bounces || {}, bs = b.by_source || {};
+    function rate(x) { x = x || { sent: 0, bounced: 0 }; var n = x.sent + x.bounced; return n ? x.bounced + ' of ' + n + ' bounced' : 'none sent'; }
+    var delSec = h('section', { 'data-feature': 'email' }, h('h2', null, 'Delivery'),
+      kv([
+        ['Guessed addresses', rate(bs.guessed)],
+        ['Confirmed addresses', rate(bs.verified)],
+        ['Last checked', b.last_checked ? fmtDT(b.last_checked) : 'not yet', b.error ? 'err' : null]
+      ]),
+      h('div', { class: 'form-actions' },
+        h('button', { type: 'button', class: 'btn-sm', disabled: !!S.busy.bounces, 'data-fk': 'bounce-check',
+          onclick: function () { post('bounces', '/api/bounces/check', {}); } }, S.busy.bounces ? 'Checking' : 'Check now')),
+      b.error ? h('div', { class: 'err' }, 'Last check failed: ' + b.error) : null,
+      S.errors.bounces ? h('div', { class: 'err' }, S.errors.bounces) : null);
+    grid.appendChild(delSec);
+
+    // Your own sent replies, waiting for a review by the learn skill. Not read by the drafter.
+    var hr = (m.inbox || {}).my_replies || { waiting: 0, total: 0 };
+    grid.appendChild(h('section', { 'data-feature': 'email' }, h('h2', null, 'Your replies'),
+      kv([
+        ['Waiting for review', String(hr.waiting), hr.waiting ? 'big' : null],
+        ['In the file', String(hr.total)],
+        ['File', (m.inbox || {}).my_replies_file || 'data/my-replies.md', 'mono']
+      ]),
+      h('p', { class: 'muted' }, hr.waiting
+        ? 'Run /learn in Claude Code over the new entries, then add a "## Reviewed" line with the date at the end of the file.'
+        : 'Nothing new since the last review. The drafter does not read this file.')));
+
+    // Quality
+    var qSec = h('section', { 'data-feature': 'outreach' }, h('h2', null, 'Draft quality'),
+      kv([
+        ['Drafts', String(or(q.drafts, 0))],
+        ['Decided', String(or(q.decided, 0))],
+        ['Edited', String(or(q.edited, 0))],
+        ['Edit rate', pct(q.edit_rate), 'big'],
+        ['Average audit', q.avg_audit === null || q.avg_audit === undefined ? 'no data yet' : String(q.avg_audit)],
+        ['Repaired', String(or(q.repaired, 0))]
+      ]),
+      h('h3', null, 'By week'),
+      miniTable([['Week'], ['Drafts', true], ['Average audit', true]],
+        (q.by_week || []).map(function (w) { return [w.week, String(w.drafts), w.avg_audit === null || w.avg_audit === undefined ? 'no data yet' : String(w.avg_audit)]; }), 'No drafts yet.'));
+    grid.appendChild(qSec);
+
+    // Spend
+    var spSec = h('section', { 'data-feature': 'outreach' }, h('h2', null, 'Spend'),
+      kv([
+        ['Total, estimated', usd(sp.total_usd), 'big'],
+        ['People searches', String(or(sp.apify_calls, 0))],
+        ['Email lookups', String(or(sp.email_calls, 0))]
+      ]),
+      h('h3', null, 'By week, estimated'),
+      miniTable([['Week'], ['Searches', true], ['Email lookups', true], ['Est. USD', true]],
+        (sp.by_week || []).map(function (w) { return [w.week, String(or(w.apify, 0)), String(or(w.email, 0)), usd(w.usd)]; }), 'No paid calls yet.'),
+      h('h3', null, 'By job, estimated'),
+      miniTable([['Job'], ['Calls', true], ['Est. USD', true]],
+        (sp.by_job || []).map(function (j) {
+          return [[h('strong', null, j.company || ''), h('div', { class: 'muted' }, j.title || '')], String(or(j.apify, 0) + or(j.email, 0)), usd(j.usd)];
+        }), 'No paid calls yet.'));
+    grid.appendChild(spSec);
+    root.appendChild(grid);
+  }
+
+  // ---------- routing and boot ----------
+  function route() {
+    // "#inbox?job=<id>" is the Inbox tab filtered to one job; plain "#inbox" clears the filter.
+    var parts = (location.hash || '').replace('#', '').split('?'), t = parts[0], jm = /(?:^|&)job=([^&]*)/.exec(parts[1] || '');
+    S.tab = TABS.indexOf(t) !== -1 ? t : 'jobs';
+    S.inboxJob = S.tab === 'inbox' && jm ? decodeURIComponent(jm[1]) : null;
+    // "#jobs?add=<company>&li=<company linkedin link>" (from the side panel's captured person) opens the add form filled in.
+    var am = /(?:^|&)add=([^&]*)/.exec(parts[1] || ''), lm = /(?:^|&)li=([^&]*)/.exec(parts[1] || '');
+    if (S.tab === 'jobs' && am) {
+      S.addForm = newAddForm({ company: decodeURIComponent(am[1]), company_url: lm ? decodeURIComponent(lm[1]) : '' });
+      S.addOpen = true;
+    }
+    S.autoConfirm = false;
+    render();
+    refreshNow();
+  }
+  window.addEventListener('hashchange', route);
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') refreshNow(); });
+  route();
+})();
+</script>
+</body>
+</html>

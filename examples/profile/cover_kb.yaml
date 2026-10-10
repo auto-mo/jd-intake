@@ -1,0 +1,31 @@
+# Cover letter building blocks (invented example). Onboarding drafts yours from your stories; the
+# cover-letter writer picks one variant per section and adapts it to the job.
+sections:
+  - section: 1
+    name: Opener
+    description: Why this company and role, in one or two sentences.
+    variants:
+      - id: opener-operations
+        label: Operations problems at scale
+        text: I like operations problems that look messy until someone puts the numbers side by side.
+        note: Use for operations and strategy roles.
+  - section: 2
+    name: Story
+    description: One story that proves the fit, with a real number from profile.md.
+    variants:
+      - id: story-network
+        label: Network redesign
+        text: At Northbridge I led a study across 40 warehouses that leadership used to close two sites and save $2.1M a year.
+        note: The strongest operations story.
+      - id: story-clinics
+        label: Clinic scheduling
+        text: At Copperleaf Health I redesigned scheduling across 12 clinics and cut patient intake time by 30%.
+        note: Use for healthcare or service operations.
+  - section: 3
+    name: Closing
+    description: A short, specific close.
+    variants:
+      - id: close-simple
+        label: Simple
+        text: I would welcome the chance to talk about how I could help.
+        note: Default.

@@ -1,0 +1,91 @@
+# An invented person. Every name, school, employer and number here is fictional.
+# Onboarding (the `onboard` skill in Claude Code) writes your own copy of this file to profile/profile.yaml.
+# The server, the resume engine and the skills read everything personal from profile/ and nothing else.
+
+identity:
+  name: Alex Rivera                 # as it appears at the top of the resume
+  first_name: Alex
+  email: alex.rivera@example.com
+  phone: "+1 (555) 010-0199"
+  location: Chicago, IL
+  linkedin: https://www.linkedin.com/in/alex-rivera-example
+  website: https://alexrivera.example.com
+
+# Facts every generated sentence must respect. Each is checked by the writers; keep them short and true.
+standing_facts:
+  - Alex finished an MS in Data Science at Lakeview University in May 2025. It is complete; never write it in the future tense.
+  - Alex has about six years of work experience in analytics and operations.
+
+degrees:
+  - name: MS in Data Science
+    school: Lakeview University
+    date: May 2025
+    completed: true
+
+# Schools whose alumni count as a warm path in people search. Aliases match how people write them on LinkedIn.
+schools:
+  - name: Lakeview University
+    aliases: ["lakeview university", "lakeview univ"]
+
+# Employers newest first. The resume engine keeps this order and warns if one goes missing.
+experience_order: [Northbridge Logistics, Copperleaf Health, Brightline Retail]
+keep_every_role: true               # never drop a role to make the page fit
+
+targets:
+  roles: [Strategy and Operations, Business Operations, Product Operations, Analytics Manager]
+  level: mid                        # entry | mid | senior | executive; drives the level-fit check
+  level_words_at_level: [analyst, associate, senior associate, manager]
+  locations: [Chicago, IL, Remote (US)]
+  preferred_cities: [Chicago, New York]
+  years_experience: 6               # rough total; a posting asking for 3+ more years than this is flagged as a stretch
+
+work_authorization:
+  # true only if you need an employer to sponsor a visa. Turns on the sponsorship plug-in.
+  needs_sponsorship: false
+  summary: Authorized to work in the US without sponsorship.
+  # Which job-posting requirements are hard blockers for you: citizenship, clearance, visa, contract.
+  # A blocker listed here stops automatic evaluation; anything else is shown as a soft flag.
+  hard_blockers: [clearance]
+  # Sponsorship plug-in only: named visa routes that an employer's exception list can mention
+  # (keys of exempt_groups_by_route in plugins/sponsorship/sponsorship-policies.yaml).
+  routes: []
+
+# Tools you have really used. The evaluator treats anything else a posting asks for as a gap to ask about.
+tools_confirmed: [SQL, Python, Tableau, Excel, Looker, dbt, Jira, Notion]
+
+resume:
+  file_stem: Alex_Rivera          # files are named <file_stem>_<Company>.pdf
+  builds_title: SELECTED PROJECTS  # heading of the optional projects section above experience
+  bullets_per_role: [1, 4]
+  font: Times New Roman
+
+cover_letter:
+  words: [250, 350]
+  signature: Alex Rivera
+
+# Optional features. Each one stays off until you turn it on here and finish its setup (see docs/).
+features:
+  sponsorship: false            # visa sponsorship lookups (docs/sponsorship.md)
+  outreach: false               # people search and drafted outreach (docs/outreach.md); paid lookups
+  email: false                  # send approved outreach and read replies over SMTP/IMAP (docs/email.md)
+  alerts: false                 # Telegram alerts when something breaks (docs/alerts.md)
+
+outreach:
+  timezone: America/Chicago
+  send_window: [9, 17]          # weekdays, local hours
+  daily_cap: 10
+  gap_minutes: [20, 40]
+  small_company: 300            # below this headcount founders and the CEO are searched too
+  email_words: [110, 140]
+  signature: |-
+    Best,
+    Alex Rivera
+
+models:                         # Claude Code model names or aliases
+  evaluate: sonnet
+  build: sonnet
+  planner: opus
+  ask: opus
+  outreach: opus
+  inbox: sonnet
+  handoff: sonnet
