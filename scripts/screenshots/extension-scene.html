@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Analytics Manager at Wonka Industries</title>
+<!-- A mock browser window for the README screenshot: an invented job posting with the real side panel
+     (served by the demo at /_panel) open beside it. Light or dark follows prefers-color-scheme. -->
+<style>
+  :root { --bg:#eef1f6; --win:#ffffff; --bar:#e8ebf1; --tab:#ffffff; --ink:#1b2430; --muted:#5d6878; --line:#d9dee7;
+          --accent:#1F6FE5; --chip:#eef3fd; --page:#ffffff; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0b1119; --win:#121a25; --bar:#0f1620; --tab:#1a2431; --ink:#e7edf5; --muted:#93a1b5; --line:#263244;
+            --accent:#6aa5ff; --chip:#18263a; --page:#121a25; }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--ink); }
+  .win { position: absolute; inset: 22px; border-radius: 12px; overflow: hidden; background: var(--win);
+         box-shadow: 0 22px 60px rgba(10, 20, 40, 0.22), 0 0 0 1px var(--line); display: flex; flex-direction: column; }
+  .bar { height: 46px; background: var(--bar); display: flex; align-items: center; gap: 14px; padding: 0 16px; border-bottom: 1px solid var(--line); }
+  .dots span { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 7px; }
+  .dots span:nth-child(1) { background: #ff5f57; } .dots span:nth-child(2) { background: #febc2e; } .dots span:nth-child(3) { background: #28c840; }
+  .url { flex: 1; max-width: 640px; height: 30px; border-radius: 8px; background: var(--tab); color: var(--muted); display: flex; align-items: center;
+         padding: 0 14px; font-size: 13px; border: 1px solid var(--line); }
+  .url b { color: var(--ink); font-weight: 500; }
+  .ext { margin-left: auto; width: 26px; height: 26px; border-radius: 7px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 700;
+         display: grid; place-items: center; }
+  .main { flex: 1; display: flex; min-height: 0; }
+  .page { flex: 1; overflow: hidden; background: var(--page); padding: 34px 48px; }
+  .co { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 14px; }
+  .logo { width: 38px; height: 38px; border-radius: 9px; background: linear-gradient(135deg, #7b4dd6, #c0428a); color: #fff; font-weight: 800; display: grid; place-items: center; }
+  h1 { font-size: 30px; line-height: 1.2; margin: 18px 0 6px; letter-spacing: -0.01em; }
+  .meta { color: var(--muted); margin-bottom: 18px; }
+  .chips span { display: inline-block; padding: 4px 11px; border-radius: 999px; background: var(--chip); color: var(--ink); font-size: 13px; margin: 0 6px 6px 0; }
+  .apply { display: inline-block; margin: 14px 0 22px; padding: 10px 22px; border-radius: 8px; background: var(--accent); color: #fff; font-weight: 600; }
+  h2 { font-size: 17px; margin: 18px 0 6px; }
+  p, li { color: var(--ink); max-width: 720px; }
+  ul { padding-left: 20px; margin: 6px 0; }
+  .panel { width: 440px; border-left: 1px solid var(--line); background: var(--win); display: flex; flex-direction: column; }
+  .panel-head { height: 38px; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; border-bottom: 1px solid var(--line);
+                font-size: 13px; font-weight: 600; color: var(--muted); }
+  iframe { flex: 1; border: 0; width: 100%; }
+</style>
+</head>
+<body>
+<div class="win">
+  <div class="bar">
+    <div class="dots"><span></span><span></span><span></span></div>
+    <div class="url">careers.wonka.example/jobs/<b>analytics-manager</b></div>
+    <div class="ext" title="jd-intake">jd</div>
+  </div>
+  <div class="main">
+    <div class="page">
+      <div class="co"><div class="logo">W</div>Wonka Industries · Careers</div>
+      <h1>Analytics Manager</h1>
+      <div class="meta">Chicago, IL · Hybrid · Full time</div>
+      <div class="chips"><span>Analytics</span><span>Operations</span><span>SQL</span><span>Forecasting</span></div>
+      <div class="apply">Apply for this job</div>
+      <h2>About the role</h2>
+      <p>We are hiring an Analytics Manager to own the analysis that shapes how our business runs. You will partner with
+         finance and operations leaders, build forecasts and dashboards, and turn messy data into clear recommendations.</p>
+      <h2>What you will do</h2>
+      <ul>
+        <li>Own the weekly operating review: the metrics, the narrative and the follow-ups.</li>
+        <li>Build forecasts and dashboards that leaders use to make decisions every week.</li>
+        <li>Run cross-functional projects from scoping to rollout, with clear success measures.</li>
+      </ul>
+      <h2>What you bring</h2>
+      <ul>
+        <li>4+ years in analytics, operations or strategy; SQL and Python.</li>
+        <li>Experience presenting to executives.</li>
+      </ul>
+      <p style="color:var(--muted); font-size:13px; margin-top:22px;">An invented posting for the jd-intake demo.</p>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><span>jd-intake</span><span>×</span></div>
+      <iframe src="http://127.0.0.1:__PORT__/_panel" title="jd-intake side panel"></iframe>
+    </div>
+  </div>
+</div>
+</body>
+</html>

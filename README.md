@@ -21,35 +21,36 @@ Quick start), then visit http://127.0.0.1:8791/ (and http://127.0.0.1:8791/_pane
 never calls Claude or any paid service; buttons that would need the model say so. Use
 `DEV_PORT=8800 python3 server/demo.py` for another port. Stop it with Ctrl+C.
 
+**On a job posting.** Open the side panel on any posting: it captures the job, gives you an honest evaluation
+with strengths and gaps, and builds a tailored resume (and a cover letter if you want one) in one click.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/extension-dark.png">
+  <img src="docs/screenshots/extension-light.png" alt="A job posting in the browser with the jd-intake side panel open beside it, showing a fit score, strengths, gaps and an Approve and build button">
+</picture>
+
 **The dashboard.** Every job, grouped by where it stands, with its fit score, stage and outreach progress.
 
-![The jd-intake dashboard: jobs grouped into active, applied with outreach, not applied yet, rejected and skipped](docs/screenshots/dashboard.png)
-
-<table>
-<tr>
-<td width="38%" valign="top">
-
-**The side panel.** Open it on a job posting: capture, an honest evaluation with strengths and gaps,
-then one click to build a tailored resume (and a cover letter if you want one).
-
-<img src="docs/screenshots/side-panel.png" alt="The Chrome extension side panel showing an evaluated job with strengths, gaps and an Approve and build button">
-
-</td>
-<td width="62%" valign="top">
-
-**A resume.** One page, every fact traced to your profile. This is the example person's base resume
-before tailoring; a tailored build is fitted to fill the page.
-
-<img src="docs/screenshots/resume.png" alt="A one-page resume for the invented example person Alex Rivera">
-
-</td>
-</tr>
-</table>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/dashboard-dark.png">
+  <img src="docs/screenshots/dashboard-light.png" alt="The jd-intake dashboard: jobs grouped into active, applied with outreach, not applied yet, rejected and skipped">
+</picture>
 
 **Outreach (optional).** People worth contacting at a company you applied to, drafts with an audit
 score, and nothing sent until you approve it.
 
-![The outreach tab: people to approve and drafted emails with audit scores](docs/screenshots/outreach.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/outreach-dark.png">
+  <img src="docs/screenshots/outreach-light.png" alt="The outreach tab: people to approve and drafted emails with audit scores">
+</picture>
+
+**A resume.** One page, every fact traced to your profile. This is the example person's base resume
+before tailoring.
+
+<img src="docs/screenshots/resume.png" alt="A one-page resume for the invented example person Alex Rivera" width="560">
+
+The screenshots switch with your GitHub theme. Regenerate them after a UI change with
+`scripts/screenshots/capture.py` (instructions inside).
 
 ## What it can do
 

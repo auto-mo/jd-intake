@@ -10,3 +10,4 @@ node_modules/
 *.log
 .pytest_cache/
 docs/_source/
+scripts/screenshots/.scene.html
