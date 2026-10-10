@@ -973,6 +973,11 @@ post(f"/api/messages/{got['messages'][0]['id']}/skip", {"reason": "Too formal fo
 _rej = [json.loads(x) for x in open(app.LEARNING_INBOX) if '"draft_rejected"' in x]
 check("Skip writes a draft_rejected event with the reason given", any(
     x["context"].get("message") == got["messages"][0]["id"] and x["context"].get("reason") == "Too formal for a recruiter" for x in _rej), str(_rej)[-300:])
+# Let background work started by earlier steps (link backfills, earlier workers finishing up) settle first, so this
+# step sees the stored address and the job as they will be, not mid-write.
+for _t in __import__("threading").enumerate():
+    if _t is not __import__("threading").main_thread() and _t.daemon:
+        _t.join(timeout=15)
 st, r = post(f"/api/people/{pp['id']}/draft")
 check("Draft: again once the first was skipped", st == 202, str(r))
 wait_person(pp["id"])

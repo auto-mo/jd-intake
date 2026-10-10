@@ -27,7 +27,7 @@ locally is simpler.
 
 ## Steps
 
-1. **Install** on the server: Python 3.10+, `python3 -m pip install -r requirements.txt`,
+1. **Install** on the server: Python 3.10+, a venv (`python3 -m venv .venv && .venv/bin/pip install -r requirements.txt`, then run the server with `.venv/bin/python`),
    LibreOffice (`sudo apt install libreoffice-writer` on Debian or Ubuntu), Poppler
    (`sudo apt install poppler-utils`), and Claude Code.
 2. **Give Claude Code credentials on the server.** Either log in following the Claude Code

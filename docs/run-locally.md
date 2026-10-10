@@ -8,7 +8,7 @@ same machine, and Claude Code uses your Claude subscription.
 | Tool | Why | Install |
 |---|---|---|
 | Python 3.10 or newer | the server and the resume engine | macOS: `brew install python`; Linux: your distribution's `python3` |
-| The Python packages | Flask, PyYAML, python-docx, pypdf and a few more | `python3 -m pip install -r requirements.txt` |
+| The Python packages | Flask, PyYAML, python-docx, pypdf and a few more | `python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt` (a venv: Homebrew and Linux Pythons refuse a system-wide pip install) |
 | LibreOffice | turns the generated `.docx` into a PDF | macOS: `brew install --cask libreoffice`; Debian or Ubuntu: `sudo apt install libreoffice-writer` |
 | Poppler | measures and rasterizes the PDF (`pdfinfo`, `pdftotext`, `pdftoppm`) | macOS: `brew install poppler`; Debian or Ubuntu: `sudo apt install poppler-utils` |
 | Google Chrome | the capture extension | https://www.google.com/chrome/ |

@@ -69,7 +69,7 @@ has been raised once; do not re-litigate it.
 ## Non-negotiables
 
 1. **Exactly one page.** Never two. Never overflowing.
-2. **The page must be visually full.** 92 to 98 percent vertical fill. Underfill looks worse
+2. **The page must be visually full.** No more than 0.4 inch of empty space at the bottom (the engine's `trailing_in`), which is roughly 96 percent fill or more. Underfill looks worse
    than dense text and reads as thin experience.
 3. **Strict reverse chronological order**, the order in `experience_order`. Never reorder
    without explicit approval asked for in Phase 0.
@@ -241,7 +241,7 @@ python3 engine/engine.py fit content.json <application folder>/<file_stem>_<Comp
 ```
 
 `fit` renders, converts, measures every line and moves only layout spacing until the page is
-one page and 92 to 98 percent full; when spacing runs out it names the bullets that need
+one page with at most 0.4 inch left at the bottom; when spacing runs out it names the bullets that need
 characters added or cut. It also exits 2 on a repeated bullet or heading. Then:
 
 ```bash
@@ -258,7 +258,7 @@ from `experience_order`, and compare against that order.
 **Look at `page-1.jpg`** and check:
 - Exactly one page.
 - **VERTICAL FILL. This is a blocking gate, not an observation.** At 100 dpi a US Letter page is
-  about 1100 pixels tall. Content must reach roughly 1000 to 1080 pixels (92 to 98 percent).
+  about 1100 pixels tall. Content must reach roughly 1055 pixels or lower (about 0.4 inch or less of empty page).
   If it stops materially short, **do not deliver.** Add a bullet to a role carrying fewer than
   three, restore a dropped one, or expand the role that best answers the JD, then rebuild.
   Noting the gap in the delivery message is not a fix, and asking whether to pad it is not a

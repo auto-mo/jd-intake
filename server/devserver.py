@@ -51,7 +51,10 @@ _real_claude = app.run_claude
 
 
 def _no_model_for_handoff(prompt, schema=None, **kw):
-    """The dev copy asks the model nothing for a handoff note: its summary falls back to the code-written one."""
+    """The dev copy asks the model nothing for a handoff note: its summary falls back to the code-written one. The demo
+    (JDI_DEMO, from demo.py) asks the model nothing at all, so clicking around it never spends Claude usage."""
+    if os.environ.get("JDI_DEMO"):
+        return {"error": "This is the demo: it never calls Claude. Run /onboard to set up your own profile."}
     if schema is app.hf.SUMMARY_SCHEMA or schema is app.PERSON_SCHEMA:     # a profile read falls back to the page's own reading here
         return {"error": "dev server: no model"}
     return _real_claude(prompt, schema=schema, **kw)

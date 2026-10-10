@@ -27,8 +27,9 @@ automatic skip unless the posting is absolute.
    one-line `summary` (it is what the application answers use).
 2. Get the data. The lookup reads an employer summary built from the DOL Office of Foreign
    Labor Certification performance data (https://www.dol.gov/agencies/eta/foreign-labor/performance).
-   `plugins/sponsorship/lca-schema.md` describes the file it expects, its columns, and where to
-   put it. The first lookup converts it into a small SQLite cache next to the plug-in; later
+   The quickest way: `python3 plugins/sponsorship/download_lca.py` fetches the last two complete
+   fiscal years into `plugins/sponsorship/data/` (add years as arguments, e.g. `... 2024 2025`).
+   `plugins/sponsorship/lca-schema.md` describes the files, their columns, and where they go. The first lookup converts it into a small SQLite cache next to the plug-in; later
    lookups are instant. The data is public; download a fresh year when the DOL publishes one.
 3. Set `features: sponsorship: true` in `profile/profile.yaml` and restart the server.
 

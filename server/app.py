@@ -675,7 +675,7 @@ def claude_status():
         return "missing"
     try:
         r = subprocess.run([b, "-p", "Reply with the single word OK.", "--output-format", "json",
-                            "--max-turns", "1", "--model", "haiku", "--tools", "",
+                            "--max-turns", "1", "--model", "haiku", "--tools", "", "--setting-sources", "",
                             "--strict-mcp-config", "--mcp-config", '{"mcpServers":{}}'],
                            capture_output=True, text=True, timeout=60, cwd=ROOT, stdin=subprocess.DEVNULL)
         if not r.stdout.strip():
@@ -849,8 +849,9 @@ def _run_claude_once(prompt, schema, resume, model, timeout, tools, permission_m
         cmd += ["--effort", effort]      # "low" for mechanical follow-ups: shorten these three items
     if system_prompt is not None:
         cmd += ["--system-prompt", system_prompt]      # replaces the CLI's default system prompt
-    if setting_sources is not None:
-        cmd += ["--setting-sources", setting_sources]  # "" loads no settings files at all
+    # "" loads no settings files and no CLAUDE.md: the prompts carry everything they need, and the user's own global
+    # instructions (written for their interactive sessions) must not leak into a resume or an email.
+    cmd += ["--setting-sources", "" if setting_sources is None else setting_sources]
     t0 = time.time()
     r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, cwd=ROOT, input=prompt)
     if r.returncode != 0 and not r.stdout.strip():
@@ -4531,6 +4532,9 @@ def api_people_manual():
     tracked, where."""
     if not from_owner():
         return forbidden()
+    off = feature_off("outreach", "Outreach")
+    if off:
+        return off
     body = request.get_json(force=True) or {}
     name = outreach.clean_name((body.get("name") or "").strip())
     slug = profile_slug(body.get("linkedin_url"))
@@ -4779,9 +4783,10 @@ def api_person_find_email(pid):
         return jsonify({"error": NO_APIFY, "needs": "apify_token"}), 400
     _person_error.pop(pid, None)
     _person_busy[pid] = {"what": "email", "since": now()}
+    out = _person_out(pid)          # before the worker starts: a fast worker could clear the busy mark first
     threading.Thread(target=person_email_worker, args=(pid, p_["job_id"]), daemon=True).start()
     log_action(cur["job"] and load_job(cur["job"]["id"]), "person_find_email", detail={"person": pid})
-    return jsonify(_person_out(pid)), 202
+    return jsonify(out), 202
 
 
 REVISE_BELOW = 70              # a draft the audit scores under this gets one revision from the audit's notes

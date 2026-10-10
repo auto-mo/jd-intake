@@ -48,7 +48,7 @@ stage. It talks only to the server address set in its settings (default
 **`engine/`**: the resume and cover letter generator. No model inside.
 - `engine.py`: `render` (content to `.docx` through `template.docx`), `convert` (LibreOffice to
   PDF), `measure` (every line's width from the PDF), `fit` (moves only layout spacing until the
-  page is one page and 92 to 98 percent full), `check` (em dashes, banned phrases, role order,
+  page is one page with at most 0.4 inch left empty at the bottom, roughly 96 percent full), `check` (em dashes, banned phrases, role order,
   repeated content, every number traced to your profile, answers or base version).
 - `build.py`: the XML helpers. `base_render.py`: render a base version as is.
   `make_cover_letter.py`: the cover letter. `measure.py`, `deficit.py`: line-fill reports.

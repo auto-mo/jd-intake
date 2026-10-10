@@ -17,7 +17,7 @@ and the skills need, at least one base resume renders to one full page, and the 
 to load the extension and start the server.
 
 Talk to the user as "you". Keep every message short. Ask in small batches (three to six
-questions), never a wall of questions. Say where you are in the process ("Step 3 of 8").
+questions), never a wall of questions. Say where you are in the process ("Step 3 of 9").
 
 ## Ground rules
 
@@ -25,7 +25,7 @@ questions), never a wall of questions. Say where you are in the process ("Step 3
   their answers in this conversation. A number, title, date, tool or achievement they have not
   confirmed stays off. When a document and an answer disagree, ask.
 - **Never ask for a secret in chat.** Passwords, API keys and tokens go into `.env` through the
-  hidden-input command in Step 7. If the user pastes one into chat anyway, do not repeat it, write
+  hidden-input command in Step 6. If the user pastes one into chat anyway, do not repeat it, write
   it to `.env` yourself only if they ask, and suggest they rotate it.
 - **Write in the exact format of `examples/profile/`.** Open the matching example file before
   writing each profile file, and keep every key, its nesting and its type. The loader is
@@ -51,7 +51,7 @@ Run these checks and report one line each, with the fix for anything missing:
 | Check | Command | Fix |
 |---|---|---|
 | Python 3.10 or newer | `python3 --version` | macOS: `brew install python`; Linux: the distribution's `python3` package |
-| Python packages | `python3 -c "import flask, yaml, docx, pypdf"` | `python3 -m pip install -r requirements.txt` |
+| Python packages | `python3 -c "import flask, yaml, docx, pypdf"` | `python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt` |
 | LibreOffice (renders resumes to PDF) | `soffice --version` | macOS: `brew install --cask libreoffice`; Debian or Ubuntu: `sudo apt install libreoffice-writer` |
 | Poppler (measures and rasterizes PDFs) | `pdfinfo -v` and `pdftoppm -v` | macOS: `brew install poppler`; Debian or Ubuntu: `sudo apt install poppler-utils` |
 | Google Chrome (for the extension) | ask the user | https://www.google.com/chrome/ |
@@ -176,9 +176,13 @@ python3 engine/engine.py fit data/onboard/<key>.json data/onboard/<file_stem>_<k
 pdftoppm -jpeg -r 100 data/onboard/<file_stem>_<key>.pdf data/onboard/<key>-page
 ```
 
-`fit` prints a JSON result. `verdict` must be `fit`: one page, 92 to 98 percent full, no orphan
-lines. If it is `over`, cut or shorten the weakest bullets; `under`, add a real bullet from
-`profile.md` to a role with fewer than three; `orphans`, lengthen or shorten the named bullets by
+`fit` prints a JSON result. `verdict` must be `fit`: one page with at most 0.4 inch left empty at the bottom (roughly 96 percent full or more), no orphan
+lines. If it is `over`, cut or shorten the weakest bullets; `under`, add real content from
+`profile.md`, in this order until it fits: a bullet for a role with fewer than three; more confirmed detail
+in the strongest bullets so they run to two full lines (ask the user for the scope, the tools, who used the
+result, the number); a projects section (`builds`) with one to three items; a certifications or methods
+line in skills; relevant coursework under education. Short careers often need two-line bullets to fill a
+page; never pad with claims the user has not confirmed, and never stretch spacing to fake fullness; `orphans`, lengthen or shorten the named bullets by
 the character counts in `measure.bullets`. Edit `base_versions.yaml`, re-run, and repeat until
 it fits. Then look at the JPEG yourself and check dates are right-aligned, bold labels render,
 and nothing reads wrong. Show the user the image path and ask them to open the PDF.

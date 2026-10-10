@@ -32,6 +32,14 @@ Onboarding writes yours to profile/profile.md. Numbers here are the only numbers
 ## Skills and tools (confirmed)
 - SQL, Python, dbt, Excel modeling, A/B testing; Tableau, Looker, Jira, Notion.
 - Methods: forecasting, network design, process mapping, stakeholder interviews, executive reporting.
+- Certifications: Lean Six Sigma Green Belt; Tableau Desktop Specialist (both part of the invented example).
+- Network study detail: modeled volume, labor and lease costs per site. Carrier benchmark: built the negotiation pack with procurement.
+- Clinic scheduling: mapped and redesigned workflows, then trained each site. No-show model: Python, two years of appointment history.
+- Promotion analysis: five product categories; leadership adopted the recommended mix change.
+- BS coursework: Econometrics, Operations Research, Statistics.
+- Brightline: rebuilt the weekly replenishment report as an automated SQL pipeline; two days to two hours; about 40 stock errors caught a month.
+- Copperleaf: led analytics for a new clinic opening; demand by zip code; staffing plan landed within 5% of the first-quarter forecast.
+- Brightline: ran holiday pricing analysis across 300 stores; markdown timing by region; end-of-season clearance inventory down 12% year over year.
 
 ## Settled questions
 - Has not managed direct reports. Has led cross-functional projects of up to eight people.

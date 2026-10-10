@@ -16,9 +16,10 @@ Nothing is ever submitted or sent without your click.
 ## What it looks like
 
 Every screenshot shows the invented example person (Alex Rivera) and invented companies. You can open
-the same demo yourself before setting anything up: `python3 server/demo.py`, then visit
-http://127.0.0.1:8791/ (and http://127.0.0.1:8791/_panel for the side panel). It calls no model and no
-paid service.
+the same demo yourself before setting anything up: `python3 server/demo.py` (after the install step in
+Quick start), then visit http://127.0.0.1:8791/ (and http://127.0.0.1:8791/_panel for the side panel). It
+never calls Claude or any paid service; buttons that would need the model say so. Use
+`DEV_PORT=8800 python3 server/demo.py` for another port. Stop it with Ctrl+C.
 
 **The dashboard.** Every job, grouped by where it stands, with its fit score, stage and outreach progress.
 
@@ -66,7 +67,7 @@ would this employer shortlist you today?
 **Ask, then build once.** Anything the resume would need that your profile does not settle
 (a tool the posting names, whether you have managed people) becomes a one-tap question. Then a
 tailored resume is built: Claude writes the words, and the engine renders the document, measures
-every line, and adjusts spacing until it is exactly one page and 92 to 98 percent full, with no
+every line, and adjusts spacing until it is exactly one page with no more than 0.4 inch left empty at the bottom (roughly 96 percent full), with no
 one-word last lines. It checks for em dashes, banned phrases, role order, repeated bullets and
 every number against your profile. A cover letter can be built from your own building blocks,
 250 to 350 words, one page.
@@ -143,10 +144,12 @@ after a few jobs you will know your real numbers. To spend less, set cheaper mod
 You need Python 3.10 or newer, LibreOffice, Poppler, Google Chrome and Claude Code.
 
 ```bash
-git clone <this repository> jd-intake
+git clone https://github.com/auto-mo/jd-intake.git
 cd jd-intake
-python3 -m pip install -r requirements.txt
-claude                      # then type /onboard
+python3 -m venv .venv          # a private Python for this project
+source .venv/bin/activate      # run this in every new terminal before the server
+pip install -r requirements.txt
+claude                         # then type /onboard
 ```
 
 `/onboard` checks the prerequisites and says how to install anything missing, reads your
@@ -158,7 +161,8 @@ and run it again; it carries on where it left off.
 Then:
 
 ```bash
-python3 server/app.py       # serves http://127.0.0.1:8790
+source .venv/bin/activate      # if this terminal does not have it yet
+python3 server/app.py          # serves http://127.0.0.1:8790
 ```
 
 In Chrome, open `chrome://extensions`, turn on Developer mode, click **Load unpacked** and pick

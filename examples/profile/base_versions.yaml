@@ -16,7 +16,7 @@ versions:
       - school: WESTFIELD STATE COLLEGE
         date: May 2018
         place: Columbus, OH
-        lines: ["BS in Economics"]
+        lines: ["BS in Economics", "Coursework: Econometrics, Operations Research, Statistics"]
     builds:
       title: SELECTED PROJECTS
       items:
@@ -28,28 +28,32 @@ versions:
         title: Senior Operations Analyst | Chicago, IL
         dates: Jun 2025 – Present
         bullets:
-          - Led a network redesign study across 40 warehouses that leadership used to close two sites and save $2.1M a year.
+          - Led a network redesign study across 40 warehouses, modeling volume, labor and lease costs for each site, that leadership used to close two sites and save $2.1M a year.
           - Built the weekly operations review, aligning finance and regional leads on one set of numbers and cutting the meeting from two hours to forty minutes.
-          - Ran a carrier rate benchmark across 14 lanes and renegotiated three contracts, lowering freight cost per order by 7%.
+          - Ran a carrier rate benchmark across 14 lanes with procurement, built the negotiation pack and renegotiated three contracts, lowering freight cost per order by 7%.
           - Coached four analysts on SQL and dbt, moving the team's recurring reports off spreadsheets and onto tested models.
       - company: Copperleaf Health
         title: Operations Analyst | Columbus, OH
         dates: Jul 2020 – Aug 2023
         bullets:
-          - Cut patient intake time by 30% by redesigning scheduling workflows across 12 clinics with front-desk and nursing leads.
+          - Cut patient intake time by 30% by mapping and redesigning scheduling workflows across 12 clinics with front-desk and nursing leads, then training each site on the new process.
           - Automated monthly utilization reporting, saving the team about 20 hours a month and removing a recurring source of errors.
-          - Built a no-show prediction model that let clinics double-book the riskiest slots, recovering about 450 visits a quarter.
+          - Led the analytics workstream for a new clinic opening, sizing patient demand by zip code and setting the staffing plan that the clinic opened with, within 5% of its first-quarter forecast.
+          - Built a no-show prediction model in Python from two years of appointment history that let clinics double-book the riskiest slots, recovering about 450 visits a quarter.
       - company: Brightline Retail
         title: Business Analyst | Columbus, OH
         dates: Jun 2018 – Jun 2020
         bullets:
-          - Analyzed promotion performance across 300 stores and recommended a mix change that lifted margin 2 points.
+          - Analyzed promotion performance across 300 stores and five product categories, and recommended a promotion mix change that leadership adopted, lifting margin 2 points.
           - Built the first store-level sales dashboard, adopted by 25 district managers within a month of launch.
+          - Rebuilt the weekly inventory replenishment report from manual exports into an automated SQL pipeline, cutting its turnaround from two days to two hours and catching about 40 stock errors a month.
+          - Ran the pricing analysis for the holiday season across all 300 stores, setting markdown timing by region and cutting end-of-season clearance inventory by 12% against the prior year.
     skills_title: SKILLS
     skills:
       - ["Analytics", "SQL, Python, dbt, Excel modeling, A/B testing"]
       - ["Tools", "Tableau, Looker, Jira, Notion"]
       - ["Methods", "Forecasting, network design, process mapping, stakeholder interviews, executive reporting"]
+      - ["Certifications", "Lean Six Sigma Green Belt (invented example), Tableau Desktop Specialist (invented example)"]
     projects: []
   analytics:
     label: Analytics

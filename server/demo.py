@@ -6,6 +6,7 @@ stages, a rendered resume and sample outreach, then starts the dev server on it.
 Apify or a mail server, and nothing is written outside a temp folder.
 
 Run:   python3 server/demo.py           then open http://127.0.0.1:8791/  (side panel preview: /_panel)
+       DEV_PORT=8800 python3 server/demo.py   to use another port
 Stop:  Ctrl+C. The temp folder is deleted on exit.
 """
 import importlib.util
@@ -108,6 +109,8 @@ def main():
             con.execute("UPDATE jobs SET captured_at=? WHERE id=?", (fields["captured_at"], job["id"]))
     print(f"demo: {len(JOBS)} invented jobs for {app.userprofile.name()}")
     env = dict(os.environ, DEV_SRC_DB=app.DB, JDI_DEMO="1")
+    import signal
+    signal.signal(signal.SIGTERM, lambda *a: sys.exit(0))      # a plain kill still cleans up the temp folder
     try:
         subprocess.run([sys.executable, os.path.join(HERE, "devserver.py")], env=env, check=False)
     finally:
